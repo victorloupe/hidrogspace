@@ -211,3 +211,92 @@ body {
   box-shadow: var(--shadow-md);
   padding: 32px;
 }
+
+/* ── Tabela de Itens Responsiva (Celular) ────────────────── */
+@media (max-width: 576px) {
+  #itemsTable, 
+  #itemsTable thead, 
+  #itemsTable tbody, 
+  #itemsTable tr, 
+  #itemsTable td {
+    display: block;
+  }
+  #itemsTable thead {
+    display: none !important; /* Esconde cabeçalho da tabela */
+  }
+  #itemsTable tbody tr {
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 8px;
+    padding: 12px 10px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    background: #f8fafc;
+  }
+  #itemsTable td {
+    border: none !important;
+    padding: 0 !important;
+    width: auto !important;
+  }
+  
+  /* Linha de Cima (Número, Descrição, Botão Remover) */
+  #itemsTable td:nth-child(1) {
+    grid-column: span 1;
+    font-weight: bold;
+    color: var(--brand);
+    align-self: center;
+    text-align: left !important;
+  }
+  #itemsTable td:nth-child(2) {
+    grid-column: span 10;
+  }
+  #itemsTable td:nth-child(6) {
+    grid-column: span 1;
+    text-align: right !important;
+    align-self: center;
+  }
+  
+  /* Linha de Baixo (Qtd, Unitário, Total) */
+  #itemsTable td:nth-child(3) {
+    grid-column: span 3;
+    margin-top: 4px;
+  }
+  #itemsTable td:nth-child(4) {
+    grid-column: span 4;
+    margin-top: 4px;
+  }
+  #itemsTable td:nth-child(5) {
+    grid-column: span 5;
+    margin-top: 4px;
+  }
+  
+  /* Pequenos rótulos informativos no mobile */
+  #itemsTable td:nth-child(3)::before {
+    content: "Qtd";
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  #itemsTable td:nth-child(4)::before {
+    content: "Unitário";
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  #itemsTable td:nth-child(5)::before {
+    content: "Total";
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+}
