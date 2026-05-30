@@ -1,0 +1,213 @@
+/* styles.css — Hidro G • Design moderno + responsivo */
+
+:root {
+  --brand:      #0ea5e9;
+  --brand-600:  #0284c7;
+  --brand-700:  #0369a1;
+  --brand-50:   #f0f9ff;
+  --bg:         #f1f5f9;
+  --text:       #0f172a;
+  --text-muted: #64748b;
+  --card:       #ffffff;
+  --border:     #e2e8f0;
+  --radius:     12px;
+  --header-h:   76px;
+  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.05);
+}
+
+/* Base */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding-top: var(--header-h); /* espaco para o header fixo */
+}
+
+/* ── Header fixo ────────────────────────────────────────── */
+.site-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
+  height: var(--header-h);
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: flex; align-items: center;
+  padding: 0 clamp(12px, 3vw, 32px);
+  gap: 16px;
+}
+.site-header img { height: 50px; flex-shrink: 0; }
+
+/* Wrap de conteudo */
+.wrap {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: 24px clamp(12px, 2vw, 24px) 80px;
+}
+
+/* ── Botoes ─────────────────────────────────────────────── */
+.btn-brand {
+  background: linear-gradient(135deg, var(--brand), var(--brand-600));
+  border: none; color: #fff; font-weight: 600;
+  box-shadow: 0 2px 4px rgba(14,165,233,.35);
+  transition: all .15s;
+}
+.btn-brand:hover, .btn-brand:focus {
+  background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+  color: #fff; box-shadow: 0 4px 8px rgba(14,165,233,.4);
+  transform: translateY(-1px);
+}
+
+/* ── Cards ──────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow);
+  transition: box-shadow .15s;
+}
+.card:hover { box-shadow: var(--shadow-md); }
+
+/* ── KPI cards ──────────────────────────────────────────── */
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  display: flex; align-items: center; gap: 12px;
+  transition: box-shadow .15s;
+}
+.kpi-card:hover { box-shadow: var(--shadow-md); }
+.kpi-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; flex-shrink: 0;
+}
+
+/* Container do formulario */
+.container-wide { background: #fff; border-radius: var(--radius); padding: 20px; }
+
+/* Section header (cadastro) */
+.section-header {
+  background: var(--brand-50);
+  border-left: 3px solid var(--brand);
+  color: var(--brand-700);
+  font-weight: 600; font-size: .9rem;
+  padding: 6px 12px; margin: 20px 0 10px;
+  border-radius: 0 6px 6px 0;
+}
+.brand { color: var(--brand); font-weight: 700; }
+
+/* ── STATUS — badges sem pontinho ───────────────────────── */
+.badge-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* Cores por tipo */
+.badge-status.expired,
+.status-expired       { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.badge-status.today,
+.status-today         { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.badge-status.soon,
+.status-soon          { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd;
+                        animation: badgePulse 2s infinite; }
+.badge-status.ok,
+.status-ok            { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.badge-status.open    { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+@keyframes badgePulse {
+  0%,100% { box-shadow: none; }
+  50%      { box-shadow: 0 0 0 3px rgba(139,92,246,.2); }
+}
+
+/* ── Chips de resumo ────────────────────────────────────── */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--card); border: 1px solid var(--border);
+  padding: .3rem .75rem; border-radius: 999px;
+  font-size: .82rem; color: var(--text-muted);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.chip b { color: var(--text); }
+
+/* ── Tabela ─────────────────────────────────────────────── */
+.table { font-size: .875rem; }
+.table thead th {
+  background: #f8fafc;
+  color: var(--text-muted);
+  font-weight: 600; font-size: .75rem;
+  text-transform: uppercase; letter-spacing: .05em;
+  border-bottom: 2px solid var(--border);
+  padding: 10px 12px;
+}
+.table tbody tr { transition: background .1s; }
+.table tbody tr:hover { background: #f8fafc; }
+.table td { vertical-align: middle; border-color: var(--border); padding: 10px 12px; }
+
+/* ── Filtros pill ───────────────────────────────────────── */
+.btn-filter {
+  border-radius: 999px; font-size: .78rem; padding: 4px 14px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); transition: all .15s; white-space: nowrap;
+}
+.btn-filter.active, .btn-filter:hover {
+  background: var(--brand); border-color: var(--brand); color: #fff;
+}
+
+/* Links discretos */
+.link-muted { color: #475569; text-decoration: none; }
+.link-muted:hover { color: var(--text); text-decoration: underline; }
+
+/* ── Responsivo ─────────────────────────────────────────── */
+@media (max-width: 576px) {
+  :root { --header-h: 56px; }
+  .site-header { padding: 0 12px; }
+  .kpi-card { padding: 12px 14px; }
+  .kpi-icon { width: 38px; height: 38px; font-size: 1rem; }
+  .table { font-size: .8rem; }
+  .badge-status { font-size: .72rem; padding: 3px 8px; }
+}
+
+/* ── Impressão ──────────────────────────────────────────── */
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  body { padding-top: 0 !important; background: #fff !important; font-size: 9pt; }
+  .site-header, header, nav, #btns, .toast-container,
+  .no-print, .row-remove-btn, #btnAddRow { display: none !important; }
+  .wrap { padding: 0 !important; max-width: none !important; }
+  .card { border: none !important; box-shadow: none !important; border-radius: 0 !important; }
+  .container-wide { border-radius: 0 !important; padding: 0 !important; box-shadow: none !important; }
+  input, textarea, select {
+    border: none !important; box-shadow: none !important;
+    background: transparent !important; -webkit-appearance: none;
+  }
+  table { font-size: 8pt !important; }
+  th, td { padding: 3px 4px !important; }
+  #itemsTable th:last-child, #itemsTable td:last-child { display: none !important; }
+}
+
+/* ── Tela de Login ───────────────────────────────────────── */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 20px;
+}
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 32px;
+}

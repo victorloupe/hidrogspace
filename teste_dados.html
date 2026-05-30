@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste - Inserir Dados Hidro G</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+<div class="container" style="max-width:700px">
+  <h4 class="mb-3">Inserir orçamentos de teste no Supabase</h4>
+  <div id="log" class="mb-3"></div>
+  <button class="btn btn-primary" id="btnInserir">Inserir 5 Orçamentos de Teste</button>
+  <a href="index.html" class="btn btn-outline-secondary ms-2">Voltar ao Menu</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="utils.js"></script>
+<script>
+var log = document.getElementById('log');
+function addLog(msg, tipo) {
+  var div = document.createElement('div');
+  div.className = 'alert alert-' + (tipo||'info') + ' py-2 mb-1';
+  div.textContent = msg;
+  log.appendChild(div);
+}
+
+var orcamentos = [
+  {
+    id: '20260530-001', tipo: 'Orcamento', data: '30/05/2026',
+    issueISO: '2026-05-30', dueISO: '2026-06-09',
+    clientName: 'Fazenda Boa Vista', totalNumber: 18500,
+    client: {name:'Fazenda Boa Vista', doc:'12.345.678/0001-90', phone1:'(17) 99812-3456',
+             address:'Estrada Rural km 12', neighborhood:'Zona Rural',
+             city:'Sao Jose do Rio Preto', state:'SP', cep:'15000-000', ie:'', phone2:'', phone3:''},
+    valores: {frete:0, desconto:0, subtotal:18500, total:18500},
+    extras: {garantia:'12 meses', prazo:'15 dias', validade:'10 dias',
+             pagamento:'50% entrada + 50% entrega', obs:'Bomba para poco artesiano de 150m'},
+    items: [
+      {item:1, descricao:'Bomba Submersa Ebara 2CV', qtd:1, unit:12000, total:12000},
+      {item:2, descricao:'Cabo Eletrico 3x4mm 150m', qtd:1, unit:4500,  total:4500},
+      {item:3, descricao:'Instalacao e mao de obra',  qtd:1, unit:2000,  total:2000}
+    ]
+  },
+  {
+    id: '20260530-002', tipo: 'Orcamento', data: '30/05/2026',
+    issueISO: '2026-05-30', dueISO: '2026-06-04',
+    clientName: 'Residencial Portal das Aguas', totalNumber: 7890,
+    client: {name:'Residencial Portal das Aguas', doc:'987.654.321-00', phone1:'(17) 98765-4321',
+             address:'Rua das Flores 450', neighborhood:'Jardim America',
+             city:'Sao Jose do Rio Preto', state:'SP', cep:'15085-200', ie:'', phone2:'', phone3:''},
+    valores: {frete:190, desconto:0, subtotal:7700, total:7890},
+    extras: {garantia:'6 meses', prazo:'7 dias', validade:'5 dias', pagamento:'A vista', obs:''},
+    items: [
+      {item:1, descricao:'Bomba Submersa Leao 1CV', qtd:1, unit:5200, total:5200},
+      {item:2, descricao:'Quadro de Comando',        qtd:1, unit:1800, total:1800},
+      {item:3, descricao:'Tubulacao PVC 2pol 50m',   qtd:1, unit:700,  total:700}
+    ]
+  },
+  {
+    id: '20260530-003', tipo: 'Orcamento', data: '28/05/2026',
+    issueISO: '2026-05-28', dueISO: '2026-06-27',
+    clientName: 'Industria Ceramica Moreno', totalNumber: 45200,
+    client: {name:'Industria Ceramica Moreno', doc:'55.432.100/0001-77', phone1:'(17) 3311-2200',
+             address:'Avenida Industrial 1800', neighborhood:'Distrito Industrial',
+             city:'Sao Jose do Rio Preto', state:'SP', cep:'15100-000', ie:'123.456.789.000',
+             phone2:'(17) 99900-1122', phone3:''},
+    valores: {frete:0, desconto:2000, subtotal:47200, total:45200},
+    extras: {garantia:'24 meses', prazo:'30 dias', validade:'30 dias',
+             pagamento:'30/60/90 dias', obs:'Projeto de bombeamento industrial - 3 bombas em paralelo'},
+    items: [
+      {item:1, descricao:'Bomba Submersa Industrial 10CV', qtd:3, unit:11000, total:33000},
+      {item:2, descricao:'Painel Eletrico Industrial',      qtd:1, unit:8500,  total:8500},
+      {item:3, descricao:'Tubulacao e conexoes',            qtd:1, unit:3200,  total:3200},
+      {item:4, descricao:'Projeto e instalacao',            qtd:1, unit:2500,  total:2500}
+    ]
+  },
+  {
+    id: '20260529-001', tipo: 'Orcamento', data: '29/05/2026',
+    issueISO: '2026-05-29', dueISO: '2026-05-30',
+    clientName: 'Sitio Santa Clara', totalNumber: 3200,
+    client: {name:'Sitio Santa Clara', doc:'321.654.987-11', phone1:'(17) 99123-7890',
+             address:'Estrada da Represa s/n', neighborhood:'Area Rural',
+             city:'Mirassol', state:'SP', cep:'15130-000', ie:'', phone2:'', phone3:''},
+    valores: {frete:150, desconto:0, subtotal:3050, total:3200},
+    extras: {garantia:'6 meses', prazo:'5 dias', validade:'1 dias', pagamento:'A vista',
+             obs:'Manutencao preventiva e troca de vedacao'},
+    items: [
+      {item:1, descricao:'Kit Vedacao Bomba Submersa', qtd:2, unit:350,  total:700},
+      {item:2, descricao:'Mao de obra manutencao',     qtd:1, unit:1200, total:1200},
+      {item:3, descricao:'Cabo eletrico 3x2.5mm 30m',  qtd:1, unit:1150, total:1150}
+    ]
+  },
+  {
+    id: '20260528-002', tipo: 'Orcamento', data: '28/05/2026',
+    issueISO: '2026-05-28', dueISO: '2026-05-15',
+    clientName: 'Condominio Veredas do Sol', totalNumber: 29800,
+    client: {name:'Condominio Veredas do Sol', doc:'11.222.333/0001-44', phone1:'(17) 3290-5500',
+             address:'Rua dos Ipes 200', neighborhood:'Jardim Eldorado',
+             city:'Sao Jose do Rio Preto', state:'SP', cep:'15093-450', ie:'', phone2:'', phone3:''},
+    valores: {frete:0, desconto:1200, subtotal:31000, total:29800},
+    extras: {garantia:'18 meses', prazo:'20 dias', validade:'10 dias',
+             pagamento:'Entrada 40% + saldo em 3x',
+             obs:'Substituicao de 2 bombas por modelos de alta eficiencia'},
+    items: [
+      {item:1, descricao:'Bomba Submersa 5CV Alta Eficiencia', qtd:2, unit:9500, total:19000},
+      {item:2, descricao:'Painel de Controle Automatico',       qtd:1, unit:6500, total:6500},
+      {item:3, descricao:'Cabo e tubulacao completo',           qtd:1, unit:3500, total:3500},
+      {item:4, descricao:'Remocao equipamentos antigos',        qtd:1, unit:2000, total:2000}
+    ]
+  }
+];
+
+document.getElementById('btnInserir').addEventListener('click', async function() {
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = 'Inserindo...';
+  log.innerHTML = '';
+  addLog('Conectando ao Supabase...', 'info');
+
+  var ok = 0, err = 0;
+  for (var i = 0; i < orcamentos.length; i++) {
+    var o = orcamentos[i];
+    try {
+      await BudgetDB.save(o);
+      addLog('OK: ' + o.id + ' - ' + o.clientName + ' - R$ ' + o.totalNumber.toLocaleString('pt-BR'), 'success');
+      ok++;
+    } catch(e) {
+      addLog('ERRO em ' + o.id + ': ' + e.message, 'danger');
+      err++;
+    }
+  }
+
+  if (ok > 0) {
+    addLog(ok + ' orcamento(s) inseridos com sucesso! Vá para o Menu para visualizar.', 'success');
+    document.querySelector('a[href="index.html"]').className = 'btn btn-success ms-2';
+  }
+  if (err > 0) {
+    addLog(err + ' erro(s). Verifique se o SQL foi executado no Supabase.', 'warning');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Inserir novamente';
+});
+</script>
+</body>
+</html>

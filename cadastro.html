@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cadastro - Hidro G</title>
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    #conteudoOrcamento .form-label { font-size:.82rem; color:#475569; margin-bottom:2px; display:block; }
+    .row-remove-btn { background:none; border:none; color:#dc2626; cursor:pointer; padding:0 6px; font-size:1rem; opacity:.55; line-height:1; }
+    .row-remove-btn:hover { opacity:1; }
+    .form-control:focus { border-color:var(--brand); box-shadow:0 0 0 .15rem rgba(14,165,233,.2); }
+    #numeroOrcamento, #dataHoje { border:none !important; box-shadow:none !important; background:transparent; font-size:1rem; }
+  </style>
+</head>
+<body>
+<header class="site-header d-flex align-items-center">
+  <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
+  <nav class="d-flex gap-2 ms-auto">
+    <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
+    <a class="btn btn-outline-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
+    <a class="btn btn-brand btn-sm text-white" href="#" id="navNovoBtn"><i class="fa-solid fa-plus"></i> Novo</a>
+    <button class="btn btn-sm btn-outline-danger no-print" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+  </nav>
+</header>
+
+<div class="wrap">
+<div class="card border-0 shadow-sm">
+<div class="card-body p-0">
+<div class="container-fluid container-wide py-3" id="conteudoOrcamento">
+
+  <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="brand fw-bold">Orcamento</span>
+      <input id="numeroOrcamento" class="form-control" placeholder="No do orcamento" style="width:210px">
+    </div>
+    <div class="d-flex align-items-center gap-1">
+      <input id="dataHoje" class="form-control date-input" placeholder="Data" readonly style="width:130px;text-align:right;">
+      <button class="btn btn-sm btn-outline-secondary" id="btnCalendar" type="button">
+        <i class="fa-solid fa-calendar-day"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-7">
+      <img src="logohidrog.png" alt="Logo Hidro G" class="img-fluid" style="max-height:110px;" id="logoImg">
+    </div>
+    <div class="col-md-5 text-md-end">
+      <p class="brand fw-bold mb-0" style="font-size:1.05rem;">HIDRO G BOMBAS SUBMERSAS LTDA.</p>
+      <small class="text-muted lh-lg">
+        CNPJ: 12.835.772/0001-22<br>
+        Rua Feres Bucater 1461 - Jd. Sao Marco<br>
+        Sao Jose do Rio Preto - SP<br>
+        (17) 3216-5760 - (17) 98132-4900
+      </small>
+    </div>
+  </div>
+
+  <div class="section-header">Informacoes do Cliente</div>
+  <div class="row g-2">
+    <div class="col-md-6">
+      <label class="form-label">CPF / CNPJ</label>
+      <input id="clientCNPJ" class="form-control" autocomplete="off" inputmode="numeric">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Inscricao Estadual (IE)</label>
+      <input id="clientIE" class="form-control">
+    </div>
+    <div class="col-12">
+      <label class="form-label">Nome / Razao Social</label>
+      <input id="clientName" class="form-control">
+    </div>
+    <div class="col-md-4"><label class="form-label">Telefone 1</label><input id="clientPhone1" class="form-control phone"></div>
+    <div class="col-md-4"><label class="form-label">Telefone 2</label><input id="clientPhone2" class="form-control phone"></div>
+    <div class="col-md-4"><label class="form-label">Telefone 3</label><input id="clientPhone3" class="form-control phone"></div>
+    <div class="col-md-8"><label class="form-label">Endereco</label><input id="clientAddress" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">CEP</label><input id="clientCEP" class="form-control" placeholder="00000-000"></div>
+    <div class="col-md-4"><label class="form-label">Bairro</label><input id="clientNeighborhood" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">Cidade</label><input id="clientCity" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">Estado (UF)</label><input id="clientState" class="form-control" maxlength="2" placeholder="SP"></div>
+  </div>
+
+  <div class="section-header d-flex justify-content-between align-items-center">
+    <span>Itens do Orcamento</span>
+    <button class="btn btn-sm btn-outline-primary no-print" id="btnAddRow" type="button">
+      <i class="fa-solid fa-plus"></i> Adicionar item
+    </button>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-bordered table-sm align-middle mb-2" id="itemsTable">
+      <thead class="table-light">
+        <tr>
+          <th style="width:44px">#</th>
+          <th>Descricao</th>
+          <th style="width:80px">Qtd</th>
+          <th style="width:140px">Valor Unit.</th>
+          <th style="width:140px">Total</th>
+          <th class="no-print" style="width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsTbody"></tbody>
+    </table>
+  </div>
+
+  <div class="row g-2 align-items-end mb-3">
+    <div class="col-md-4"><label class="form-label">Frete</label><input id="frete" class="form-control" placeholder="R$ 0,00"></div>
+    <div class="col-md-4"><label class="form-label">Desconto</label><input id="desconto" class="form-control" placeholder="R$ 0,00"></div>
+    <div class="col-md-4 text-end">
+      <p class="mb-1 text-muted" style="font-size:.9rem">Sub Total: <strong id="subTotal">R$ 0,00</strong></p>
+      <p class="mb-0 fw-bold" style="font-size:1.25rem">Total: <span id="totalValue">R$ 0,00</span></p>
+    </div>
+  </div>
+
+  <div class="section-header">Informacoes Complementares</div>
+  <div class="row g-2">
+    <div class="col-md-6"><label class="form-label">Garantia</label><input id="warranty" class="form-control"></div>
+    <div class="col-md-6"><label class="form-label">Prazo de Entrega</label><input id="deliveryTime" class="form-control"></div>
+    <div class="col-md-6"><label class="form-label">Validade da Proposta</label><input id="proposalValidity" class="form-control" placeholder="Ex.: 10 dias"></div>
+    <div class="col-md-6"><label class="form-label">Condicoes de Pagamento</label><input id="paymentConditions" class="form-control"></div>
+    <div class="col-12"><label class="form-label">Observacoes</label><textarea id="notes" class="form-control" rows="2"></textarea></div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap" id="btns">
+    <button class="btn btn-outline-secondary" id="novoOrcamento" type="button"><i class="fa-solid fa-file-circle-plus"></i> Novo</button>
+    <button class="btn btn-success" id="btnSalvar" type="button"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+    <button class="btn btn-danger" id="savePdfButton" type="button"><i class="fa-solid fa-file-pdf"></i> Baixar PDF</button>
+    <button class="btn btn-brand text-white" id="printButton" type="button"><i class="fa-solid fa-print"></i> Imprimir PDF</button>
+  </div>
+
+</div>
+</div>
+</div>
+
+</div><!-- .wrap -->
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div class="toast" id="toast" role="alert">
+    <div class="toast-header">
+      <strong class="me-auto">HIDRO G</strong>
+      <small>agora</small>
+      <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body" id="toastMsg"></div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="utils.js"></script>
+<script>
+var $id = function(id) { return document.getElementById(id); };
+
+function showToast(msg) {
+  sysAlert(msg);
+}
+function setVal(id, v) { var el = $id(id); if (el) el.value = (v != null ? v : ''); }
+function getVal(id) { return ($id(id) ? $id(id).value : '').trim(); }
+function onlyDigits(s) { return String(s || '').replace(/\D/g, ''); }
+
+/* Numeracao diaria */
+function gerarNumeroDiario() {
+  var n = new Date();
+  var ymd = n.getFullYear() + ('0'+(n.getMonth()+1)).slice(-2) + ('0'+n.getDate()).slice(-2);
+  var key = 'dailyCounter_' + ymd;
+  var seq = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+  localStorage.setItem(key, String(seq));
+  return ymd + '-' + ('000'+seq).slice(-3);
+}
+
+/* Linhas dinamicas */
+function criarLinha(num) {
+  var tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td class="text-center row-num text-muted fw-bold" style="font-size:.82rem">' + num + '</td>' +
+    '<td><input class="form-control form-control-sm row-desc" type="text" autocomplete="off"></td>' +
+    '<td><input class="form-control form-control-sm row-qtd" type="number" value="0" min="0" step="0.001"></td>' +
+    '<td><input class="form-control form-control-sm row-unit" placeholder="R$ 0,00"></td>' +
+    '<td><input class="form-control form-control-sm row-total" readonly value="R$ 0,00"></td>' +
+    '<td class="no-print text-center"><button class="row-remove-btn" type="button" onclick="removerLinha(this)">x</button></td>';
+  tr.querySelector('.row-qtd').addEventListener('input', recalc);
+  tr.querySelector('.row-unit').addEventListener('input', function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
+  tr.querySelector('.row-unit').addEventListener('blur',  function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
+  return tr;
+}
+
+function buildRows(n) {
+  n = n || 10;
+  var tbody = $id('itemsTbody');
+  tbody.innerHTML = '';
+  for (var i = 1; i <= n; i++) tbody.appendChild(criarLinha(i));
+}
+
+function addRow() {
+  var tbody = $id('itemsTbody');
+  tbody.appendChild(criarLinha(tbody.rows.length + 1));
+}
+
+function removerLinha(btn) {
+  var tbody = $id('itemsTbody');
+  if (tbody.rows.length <= 1) return;
+  btn.closest('tr').remove();
+  var rows = tbody.querySelectorAll('tr');
+  rows.forEach(function(tr, i) {
+    var n = tr.querySelector('.row-num');
+    if (n) n.textContent = i + 1;
+  });
+  recalc();
+}
+
+/* Recalculo */
+function recalc() {
+  var subtotal = 0;
+  $id('itemsTbody').querySelectorAll('tr').forEach(function(tr) {
+    var qtd  = parseFloat(tr.querySelector('.row-qtd').value) || 0;
+    var unit = moneyUnmask(tr.querySelector('.row-unit').value);
+    var sub  = qtd * unit;
+    tr.querySelector('.row-total').value = currencyBR(sub);
+    subtotal += sub;
+  });
+  var frete = moneyUnmask(getVal('frete'));
+  var desc  = moneyUnmask(getVal('desconto'));
+  $id('subTotal').innerText   = currencyBR(subtotal);
+  $id('totalValue').innerText = currencyBR(subtotal + frete - desc);
+}
+
+/* CPF/CNPJ */
+function validarCPF(cpf) {
+  cpf = onlyDigits(cpf);
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+  var s = 0, d1, d2;
+  for (var i=0;i<9;i++) s += +cpf[i]*(10-i);
+  d1 = 11-(s%11); d1 = d1>9?0:d1; if (d1 !== +cpf[9]) return false;
+  s = 0;
+  for (var i=0;i<10;i++) s += +cpf[i]*(11-i);
+  d2 = 11-(s%11); d2 = d2>9?0:d2;
+  return d2 === +cpf[10];
+}
+
+async function buscarDocumento() {
+  var digits = onlyDigits(getVal('clientCNPJ'));
+  if (digits.length === 11) { showToast(validarCPF(digits) ? 'CPF valido.' : 'CPF invalido.'); return; }
+  if (digits.length < 14) { showToast('CNPJ incompleto: faltam ' + (14-digits.length) + ' digito(s).'); return; }
+  var cnpj = digits.slice(0, 14);
+  var sources = [
+    'https://brasilapi.com.br/api/cnpj/v1/' + cnpj,
+    'https://publica.cnpj.ws/cnpj/' + cnpj
+  ];
+  for (var i = 0; i < sources.length; i++) {
+    var d = await fetchJSON(sources[i]);
+    if (!d || d.status === 'ERROR') continue;
+    var e = d.estabelecimento || d;
+    var name = d.razao_social || d.nome_fantasia || d.nome || '';
+    if (!name) continue;
+    var log = [e.logradouro||d.logradouro, e.numero||d.numero].filter(Boolean).join(', ');
+    setVal('clientName',         name);
+    setVal('clientAddress',      log);
+    setVal('clientNeighborhood', e.bairro||d.bairro||'');
+    setVal('clientCity',         (e.cidade&&e.cidade.nome)||d.municipio||'');
+    setVal('clientState',        (e.estado&&e.estado.sigla)||d.uf||'');
+    var cep = String(e.cep||d.cep||'').replace(/\D/g,'').replace(/(\d{5})(\d{3})/,'$1-$2');
+    if (cep) setVal('clientCEP', cep);
+    showToast('Dados do CNPJ preenchidos.');
+    return;
+  }
+  showToast('Nao foi possivel consultar o CNPJ.');
+}
+
+async function buscarCEP() {
+  var cep = onlyDigits(getVal('clientCEP')).slice(0, 8);
+  if (cep.length < 8) { showToast('CEP incompleto: faltam ' + (8-cep.length) + ' digito(s).'); return; }
+  var fmt = cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+  var d = await fetchJSON('https://viacep.com.br/ws/' + cep + '/json/')
+       || await fetchJSON('https://brasilapi.com.br/api/cep/v2/' + cep);
+  if (d && !d.erro) {
+    setVal('clientAddress',      d.logradouro||d.street||'');
+    setVal('clientNeighborhood', d.bairro||d.neighborhood||'');
+    setVal('clientCity',         d.localidade||d.city||'');
+    setVal('clientState',        d.uf||d.state||'');
+    setVal('clientCEP', fmt);
+    showToast('Endereco preenchido pelo CEP.');
+  } else {
+    showToast('CEP nao encontrado.');
+  }
+}
+
+/* Formulario -> objeto */
+function getBudgetFromForm() {
+  var items = [];
+  $id('itemsTbody').querySelectorAll('tr').forEach(function(tr, i) {
+    items.push({
+      item: i+1,
+      descricao: tr.querySelector('.row-desc').value || '',
+      qtd:       parseFloat(tr.querySelector('.row-qtd').value) || 0,
+      unit:      moneyUnmask(tr.querySelector('.row-unit').value),
+      total:     moneyUnmask(tr.querySelector('.row-total').value)
+    });
+  });
+  var dataVal  = getVal('dataHoje');
+  var validade = getVal('proposalValidity');
+  var issueISO = parseBRDateToISO(dataVal);
+  var dueISO   = parseValidityToISO(validade, dataVal);
+  var total    = moneyUnmask($id('totalValue').innerText);
+  return {
+    id: getVal('numeroOrcamento'), tipo: 'Orcamento',
+    data: dataVal, issueISO: issueISO, dueISO: dueISO,
+    clientName: getVal('clientName'), totalNumber: total,
+    client: {
+      doc:          getVal('clientCNPJ'),   ie:    getVal('clientIE'),
+      name:         getVal('clientName'),   phone1:getVal('clientPhone1'),
+      phone2:       getVal('clientPhone2'), phone3:getVal('clientPhone3'),
+      address:      getVal('clientAddress'),cep:   getVal('clientCEP'),
+      neighborhood: getVal('clientNeighborhood'),
+      city:         getVal('clientCity'),   state: getVal('clientState')
+    },
+    valores: {
+      frete:    moneyUnmask(getVal('frete')),
+      desconto: moneyUnmask(getVal('desconto')),
+      subtotal: moneyUnmask($id('subTotal').innerText),
+      total:    total
+    },
+    extras: {
+      garantia:  getVal('warranty'),
+      prazo:     getVal('deliveryTime'),
+      validade:  validade,
+      pagamento: getVal('paymentConditions'),
+      obs:       getVal('notes')
+    },
+    items: items
+  };
+}
+
+/* Objeto -> formulario */
+function loadBudgetIntoForm(b) {
+  setVal('numeroOrcamento', b.id || '');
+  setVal('dataHoje',        b.data || '');
+  var c = b.client || {};
+  setVal('clientCNPJ',         c.doc || '');
+  setVal('clientIE',           c.ie || '');
+  setVal('clientName',         b.clientName || c.name || '');
+  setVal('clientPhone1',       c.phone1 || '');
+  setVal('clientPhone2',       c.phone2 || '');
+  setVal('clientPhone3',       c.phone3 || '');
+  setVal('clientAddress',      c.address || '');
+  setVal('clientCEP',          c.cep || '');
+  setVal('clientNeighborhood', c.neighborhood || '');
+  setVal('clientCity',         c.city || '');
+  setVal('clientState',        c.state || '');
+  var v = b.valores || {}, x = b.extras || {};
+  setVal('frete',    moneyMask(String(Math.round((v.frete    || 0)*100))));
+  setVal('desconto', moneyMask(String(Math.round((v.desconto || 0)*100))));
+  setVal('warranty',          x.garantia  || '');
+  setVal('deliveryTime',      x.prazo     || '');
+  setVal('proposalValidity',  x.validade  || '');
+  setVal('paymentConditions', x.pagamento || '');
+  setVal('notes',             x.obs       || '');
+  var items = b.items || [];
+  buildRows(Math.max(items.length, 10));
+  items.forEach(function(it, i) {
+    var tr = $id('itemsTbody').rows[i];
+    if (!tr) return;
+    tr.querySelector('.row-desc').value  = it.descricao || it.description || '';
+    tr.querySelector('.row-qtd').value   = it.qtd || 0;
+    tr.querySelector('.row-unit').value  = moneyMask(String(Math.round((it.unit || 0)*100)));
+    tr.querySelector('.row-total').value = currencyBR(it.total || 0);
+  });
+  recalc();
+}
+
+/* Salvar */
+async function saveBudget() {
+  var b = getBudgetFromForm();
+  if (!b.id) { showToast('Informe o numero do orcamento.'); return; }
+  await BudgetDB.save(b);
+  try { localStorage.removeItem('budgetDraft'); } catch(e) {}
+  showToast('Orcamento salvo!');
+  setTimeout(function() { window.location.href = 'index.html'; }, 800);
+}
+
+/* Reset */
+function resetForm() {
+  try {
+    localStorage.removeItem('currentBudgetId');
+    localStorage.removeItem('budgetDraft');
+  } catch(e) {}
+  buildRows(10);
+  ['clientCNPJ','clientIE','clientName','clientPhone1','clientPhone2','clientPhone3',
+   'clientAddress','clientCEP','clientNeighborhood','clientCity','clientState',
+   'warranty','deliveryTime','proposalValidity','paymentConditions','notes']
+  .forEach(function(id) { setVal(id, ''); });
+  setVal('frete',   moneyMask('0'));
+  setVal('desconto',moneyMask('0'));
+  $id('subTotal').innerText   = currencyBR(0);
+  $id('totalValue').innerText = currencyBR(0);
+  setVal('numeroOrcamento', gerarNumeroDiario());
+  setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
+  recalc();
+}
+
+/* ============================================================
+   PDF - jsPDF + autoTable (todas secoes usam tabela -> sem sobreposicao)
+   ============================================================ */
+async function gerarPDF(download) {
+  if (download === undefined) download = true;
+  var b = getBudgetFromForm();
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF('p', 'mm', 'a4');
+
+  var PW = 210, PH = 297, ML = 12, MR = 198, CW = MR - ML;
+  var BRAND = [14, 165, 233];
+
+  /* Carrega logo local */
+  var logoData = null;
+  try {
+    var r = await fetch($id('logoImg').src);
+    if (r.ok) {
+      var blob = await r.blob();
+      logoData = await new Promise(function(res) {
+        var fr = new FileReader();
+        fr.onload = function(e) { res(e.target.result); };
+        fr.readAsDataURL(blob);
+      });
+    }
+  } catch(e) {}
+
+  var y = ML;
+
+  /* Cabecalho */
+  if (logoData) doc.addImage(logoData, 'PNG', ML, y, 62, 28);
+
+  doc.setFontSize(12).setFont(undefined, 'bold').setTextColor(14, 165, 233);
+  doc.text('HIDRO G BOMBAS SUBMERSAS LTDA.', MR, y + 5, { align: 'right' });
+  doc.setFontSize(8.5).setFont(undefined, 'normal').setTextColor(80, 80, 80);
+  doc.text('CNPJ: 12.835.772/0001-22',                 MR, y + 12, { align: 'right' });
+  doc.text('Rua Feres Bucater 1461 - Jd. Sao Marco',   MR, y + 18, { align: 'right' });
+  doc.text('Sao Jose do Rio Preto - SP',                MR, y + 24, { align: 'right' });
+  doc.text('Tel: (17) 3216-5760  -  (17) 98132-4900',  MR, y + 30, { align: 'right' });
+  y += 36;
+
+  doc.setDrawColor(14, 165, 233).setLineWidth(0.6).line(ML, y, MR, y);
+  y += 6;
+
+  doc.setFontSize(13).setFont(undefined, 'bold').setTextColor(14, 165, 233);
+  doc.text((b.tipo || 'Orcamento') + '  No ' + b.id, ML, y);
+  doc.setFontSize(9).setFont(undefined, 'normal').setTextColor(60, 60, 60);
+  doc.text('Data: ' + (b.data || ''), MR, y, { align: 'right' });
+  y += 4;
+  doc.setDrawColor(210, 210, 210).setLineWidth(0.2).line(ML, y, MR, y);
+  y += 6;
+
+  /* Helper secao */
+  function secHeader(txt, yy) {
+    doc.setFillColor(240, 249, 255); doc.rect(ML, yy, CW, 7, 'F');
+    doc.setFillColor(14, 165, 233); doc.rect(ML, yy, 3, 7, 'F');
+    doc.setFontSize(8.5).setFont(undefined, 'bold').setTextColor(3, 105, 161);
+    doc.text(txt, ML + 5, yy + 5);
+    return yy + 9;
+  }
+
+  /* Helper celula label */
+  function lbl(txt) {
+    return { content: txt, styles: { fontStyle: 'bold', textColor: [3, 105, 161] } };
+  }
+
+  /* Helper tabela sem bordas */
+  function plainTable(startY, body, colStyles) {
+    doc.autoTable({
+      startY: startY, margin: { left: ML, right: ML }, body: body,
+      styles: { fontSize: 8.5, cellPadding: 2, overflow: 'ellipsis', textColor: [40, 40, 40] },
+      columnStyles: colStyles,
+      theme: 'plain', pageBreak: 'avoid'
+    });
+    return doc.lastAutoTable.finalY + 2;
+  }
+
+  /* Secao Cliente */
+  y = secHeader('INFORMACOES DO CLIENTE', y);
+  var c = b.client || {};
+  var phones = [c.phone1, c.phone2, c.phone3].filter(Boolean).join(' / ') || '-';
+  var street = [c.address, c.neighborhood].filter(Boolean).join(', ') || '-';
+  var cityUF = [c.city, c.state].filter(Boolean).join(' - ') || '';
+
+  /* Linha 1+2: Nome/CPF e Telefone/IE — 4 colunas fixas */
+  y = plainTable(y, [
+    [lbl('Nome:'),     b.clientName || '-',  lbl('CPF/CNPJ:'), c.doc || '-'],
+    [lbl('Telefone:'), phones,               lbl('IE:'),        c.ie  || '-']
+  ], {
+    0: { cellWidth: 26 }, 1: { cellWidth: 68 },
+    2: { cellWidth: 26 }, 3: { cellWidth: 'auto' }
+  });
+
+  /* Linha 3: Endereco ocupa coluna larga com linebreak; CEP em coluna separada
+     Col 0: label 26mm | Col 1: rua+bairro (auto, linebreak) | Col 2: label 16mm | Col 3: valor 38mm */
+  y = plainTable(y, [
+    [lbl('Endereco:'), street + (cityUF ? '\n' + cityUF : ''), lbl('CEP:'), c.cep || '-']
+  ], {
+    0: { cellWidth: 26 },
+    1: { cellWidth: 'auto', overflow: 'linebreak' },
+    2: { cellWidth: 16 },
+    3: { cellWidth: 38 }
+  });
+
+  /* Secao Itens */
+  y = secHeader('ITENS DO ORCAMENTO', y);
+  var items = b.items.filter(function(it) { return it.descricao || it.qtd > 0; });
+
+  var reservedBelow = 55;
+  var availH = PH - y - reservedBelow - ML;
+  var N = Math.max(items.length, 1);
+  var cellPad = 2;
+  var fs = Math.max(6, Math.min(9, Math.floor((availH / (N + 1) - 2 * cellPad) / 0.3528)));
+
+  doc.autoTable({
+    startY: y, margin: { left: ML, right: ML },
+    head: [['#', 'Descricao', 'Qtd', 'Valor Unit.', 'Total']],
+    body: items.map(function(it, i) {
+      return [i+1, it.descricao||'', it.qtd||0, currencyBR(it.unit||0), currencyBR(it.total||0)];
+    }),
+    styles:     { fontSize: fs, cellPadding: cellPad, overflow: 'ellipsis', textColor: [30, 30, 30] },
+    headStyles: { fillColor: BRAND, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: fs },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 16, halign: 'center' },
+      3: { cellWidth: 30, halign: 'right' },
+      4: { cellWidth: 30, halign: 'right' }
+    },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    theme: 'grid', pageBreak: 'avoid'
+  });
+  y = doc.lastAutoTable.finalY + 4;
+
+  /* Totais */
+  var vl = b.valores || {};
+  var TX_LBL = 148;
+
+  doc.setFontSize(9).setFont(undefined, 'normal').setTextColor(80, 80, 80);
+  if (vl.frete > 0) {
+    doc.text('Frete:', TX_LBL, y);
+    doc.text(currencyBR(vl.frete), MR, y, { align: 'right' });
+    y += 6;
+  }
+  if (vl.desconto > 0) {
+    doc.text('Desconto:', TX_LBL, y);
+    doc.text('- ' + currencyBR(vl.desconto), MR, y, { align: 'right' });
+    y += 6;
+  }
+  doc.setTextColor(30, 30, 30);
+  doc.text('Sub Total:', TX_LBL, y);
+  doc.text(currencyBR(vl.subtotal || 0), MR, y, { align: 'right' });
+  y += 3;
+  doc.setDrawColor(14, 165, 233).setLineWidth(0.3).line(TX_LBL, y, MR, y);
+  y += 2;
+  doc.setFillColor(14, 165, 233);
+  doc.rect(TX_LBL, y, MR - TX_LBL, 10, 'F');
+  doc.setFontSize(10).setFont(undefined, 'bold').setTextColor(255, 255, 255);
+  doc.text('TOTAL:', TX_LBL + 2.5, y + 7);
+  doc.text(currencyBR(vl.total || 0), MR - 2.5, y + 7, { align: 'right' });
+  y += 14;
+
+  /* Condicoes - 4 colunas via autoTable
+     Coluna label: 44mm (comporta "Prazo de Entrega:" sem sobreposicao) */
+  var x = b.extras || {};
+  var conds = [];
+  if (x.garantia)  conds.push([lbl('Garantia:'),        x.garantia ]);
+  if (x.prazo)     conds.push([lbl('Prazo de Entrega:'),x.prazo    ]);
+  if (x.validade)  conds.push([lbl('Validade:'),        x.validade ]);
+  if (x.pagamento) conds.push([lbl('Pagamento:'),       x.pagamento]);
+
+  if (conds.length > 0 || x.obs) {
+    y = secHeader('INFORMACOES COMPLEMENTARES', y);
+
+    if (conds.length > 0) {
+      var condRows = [];
+      for (var i = 0; i < conds.length; i += 2) {
+        condRows.push([
+          conds[i][0],   conds[i][1] || '-',
+          conds[i+1] ? conds[i+1][0] : { content: '' },
+          conds[i+1] ? conds[i+1][1] || '-' : ''
+        ]);
+      }
+      y = plainTable(y, condRows, {
+        0: { cellWidth: 44 }, 1: { cellWidth: 49 },
+        2: { cellWidth: 44 }, 3: { cellWidth: 'auto' }
+      });
+    }
+
+    if (x.obs) {
+      y = plainTable(y,
+        [[lbl('Observacoes:'), x.obs]],
+        { 0: { cellWidth: 40 }, 1: { cellWidth: 'auto', overflow: 'linebreak' } }
+      );
+    }
+  }
+
+  /* Rodape */
+  doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
+  doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
+  doc.text(
+    'HIDRO G BOMBAS SUBMERSAS LTDA.   -   CNPJ: 12.835.772/0001-22   -   Tel: (17) 3216-5760',
+    PW / 2, PH - 9, { align: 'center' }
+  );
+
+  /* Salva */
+  var fn = [
+    (b.id || 'orcamento').replace(/[^\w\-]+/g, '_'),
+    (b.data || '').replace(/[^\d]/g, ''),
+    (b.clientName || 'cliente').replace(/[^\w\-]+/g, '_').slice(0, 20)
+  ].filter(Boolean).join('_') + '.pdf';
+
+  if (download) {
+    doc.save(fn);
+  } else {
+    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+  }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function() {
+  var user = await checkAuth();
+  if (!user) return;
+
+  await BudgetDB.migrateFromLocalStorage();
+
+  var fp = flatpickr('.date-input', { dateFormat: 'd/m/Y', locale: 'pt' });
+  $id('btnCalendar').addEventListener('click', function() { fp.open(); });
+
+  buildRows(10);
+  setVal('numeroOrcamento', gerarNumeroDiario());
+  setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
+  setVal('frete',    moneyMask('0'));
+  setVal('desconto', moneyMask('0'));
+
+  /* Carrega para edicao ou duplicacao */
+  var editId = null;
+  var duplicateId = null;
+  try {
+    var params = new URLSearchParams(window.location.search);
+    editId = params.get('id') || localStorage.getItem('currentBudgetId');
+    duplicateId = params.get('duplicateId');
+  } catch(e) {}
+
+  if (editId) {
+    var budget = await BudgetDB.get(editId);
+    if (budget) loadBudgetIntoForm(budget);
+  } else if (duplicateId) {
+    var budget = await BudgetDB.get(duplicateId);
+    if (budget) {
+      loadBudgetIntoForm(budget);
+      setVal('numeroOrcamento', gerarNumeroDiario());
+      setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
+      recalc();
+      sysAlert('Dados do orçamento #' + duplicateId + ' copiados com sucesso! O número do orçamento foi atualizado automaticamente.');
+    }
+  } else {
+    try {
+      var draftRaw = localStorage.getItem('budgetDraft');
+      if (draftRaw) {
+        var draft = JSON.parse(draftRaw);
+        sysConfirm('Identificamos um rascunho não salvo. Deseja recuperar os dados de onde parou?', function() {
+          loadBudgetIntoForm(draft);
+        }, function() {
+          localStorage.removeItem('budgetDraft');
+        });
+      }
+    } catch(e) {
+      localStorage.removeItem('budgetDraft');
+    }
+  }
+
+  /* Mascara CNPJ/CPF: inicia como CNPJ; reformata no blur */
+  $('#clientCNPJ').mask('00.000.000/0000-00').on('blur', function() {
+    var raw = onlyDigits($(this).val());
+    if (raw.length === 11) {
+      $(this).unmask().val(raw).mask('000.000.000-00');
+    }
+    if (raw.length === 11 || raw.length === 14) buscarDocumento();
+  });
+
+  $('#clientCEP').mask('00000-000')
+    .on('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); buscarCEP(); } })
+    .on('blur', function() { if (onlyDigits($(this).val()).length >= 8) buscarCEP(); });
+
+  var phoneMask = function(v) {
+    return onlyDigits(v).length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+  };
+  $('#clientPhone1,#clientPhone2,#clientPhone3').mask(phoneMask, {
+    onKeyPress: function(v, e, f, o) { f.mask(phoneMask(v), o); }
+  });
+
+  /* Frete / Desconto */
+  ['frete', 'desconto'].forEach(function(id) {
+    $id(id).addEventListener('input', function() { recalc(); });
+    $id(id).addEventListener('blur',  function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
+  });
+
+  /* Validade */
+  $id('proposalValidity').addEventListener('blur', function() {
+    var d = this.value.replace(/\D/g, '');
+    this.value = d ? parseInt(d, 10) + ' dias' : '';
+  });
+
+  /* Botoes */
+  $id('btnAddRow').addEventListener('click',     function() { addRow(); });
+  $id('btnSalvar').addEventListener('click',     function() { saveBudget(); });
+  $id('savePdfButton').addEventListener('click', function() { gerarPDF(true); });
+  $id('printButton').addEventListener('click',   function() { gerarPDF(false); });
+
+  function confirmarNovo(e) {
+    if (e) e.preventDefault();
+    sysConfirm('Deseja descartar o que já está preenchido e iniciar um novo orçamento?', function() {
+      if (new URLSearchParams(window.location.search).get('id')) {
+        try { localStorage.removeItem('currentBudgetId'); } catch(err) {}
+        window.location.href = 'cadastro.html';
+      } else {
+        resetForm();
+      }
+    });
+  }
+
+  $id('novoOrcamento').addEventListener('click', confirmarNovo);
+  $id('navNovoBtn').addEventListener('click', confirmarNovo);
+
+  /* Timer de Salvamento Automático (Rascunho) */
+  setInterval(function() {
+    // Apenas salva rascunho se não estiver na tela de visualização vazia
+    var b = getBudgetFromForm();
+    var temConteudo = b.clientName || b.client.doc || b.items.some(function(it) { return it.descricao || it.unit > 0; });
+    if (temConteudo) {
+      try {
+        localStorage.setItem('budgetDraft', JSON.stringify(b));
+      } catch(e) {}
+    }
+  }, 5000);
+});
+</script>
+</body>
+</html>
