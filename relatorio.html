@@ -10,14 +10,21 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="site-header d-flex align-items-center">
-  <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
-  <nav class="d-flex gap-2 ms-auto">
-    <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
-    <a class="btn btn-brand btn-sm text-white" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
-    <a class="btn btn-outline-secondary btn-sm" href="cadastro.html"><i class="fa-solid fa-plus"></i> Novo</a>
-    <button class="btn btn-sm btn-outline-danger no-print" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
-  </nav>
+<header class="site-header navbar navbar-expand-md navbar-light">
+  <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
+    <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="headerNav">
+      <nav class="d-flex flex-column flex-md-row gap-2 ms-auto">
+        <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
+        <a class="btn btn-brand btn-sm text-white" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
+        <a class="btn btn-outline-secondary btn-sm" href="cadastro.html"><i class="fa-solid fa-plus"></i> Novo</a>
+        <button class="btn btn-sm btn-outline-danger no-print" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+      </nav>
+    </div>
+  </div>
 </header>
 
 <div class="wrap">

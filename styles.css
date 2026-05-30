@@ -37,6 +37,28 @@ body {
 }
 .site-header img { height: 50px; flex-shrink: 0; }
 
+@media (max-width: 768px) {
+  .site-header {
+    height: auto !important;
+    min-height: var(--header-h);
+    padding-top: 16px !important;
+    padding-bottom: 12px !important;
+  }
+  .site-header .navbar-collapse {
+    width: 100%;
+    padding-bottom: 12px;
+  }
+  .site-header nav {
+    width: 100%;
+    margin-top: 14px;
+    gap: 8px !important;
+  }
+  .site-header nav button, .site-header nav a {
+    width: 100%;
+    text-align: left;
+  }
+}
+
 /* Wrap de conteudo */
 .wrap {
   max-width: 1200px;
@@ -214,6 +236,26 @@ body {
 
 /* ── Tabela de Itens Responsiva (Celular) ────────────────── */
 @media (max-width: 576px) {
+  #orcamentoHeader {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  #orcamentoHeader > div {
+    width: 100% !important;
+  }
+  #numeroOrcamento {
+    width: 100% !important;
+  }
+  #orcamentoHeader .d-flex.align-items-center.gap-1 {
+    width: 100% !important;
+  }
+  #conteudoOrcamento .date-input {
+    flex-grow: 1 !important;
+    width: auto !important;
+    text-align: left !important;
+  }
+
   #itemsTable, 
   #itemsTable thead, 
   #itemsTable tbody, 
@@ -222,9 +264,10 @@ body {
     display: block;
   }
   #itemsTable thead {
-    display: none !important; /* Esconde cabeçalho da tabela */
+    display: none !important;
   }
   #itemsTable tbody tr {
+    position: relative !important;
     display: grid !important;
     grid-template-columns: repeat(12, 1fr);
     gap: 8px;
@@ -252,30 +295,14 @@ body {
     grid-column: span 11;
   }
   
-  /* Botão Remover Flutuante no Canto Inferior Direito */
-  #itemsTable td:nth-child(6) {
-    position: absolute;
-    bottom: -8px;
-    right: -8px;
-    width: auto !important;
-    z-index: 10;
+  /* Evita barra de rolagem horizontal ao arrastar para excluir */
+  .table-responsive {
+    overflow-x: hidden !important;
   }
-  #itemsTable td:nth-child(6) .row-remove-btn {
-    background: #ef4444 !important;
-    color: #fff !important;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: bold;
-    border: 2px solid #fff !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    padding: 0 !important;
-    line-height: 1;
-    opacity: 1 !important;
+  
+  /* Esconde o Botão Remover no mobile (Substituído pelo gesto de arrastar) */
+  #itemsTable td:nth-child(6) {
+    display: none !important;
   }
   
   /* Linha de Baixo (Qtd, Unitário, Total) */

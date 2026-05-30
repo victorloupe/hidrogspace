@@ -18,14 +18,21 @@
   </style>
 </head>
 <body>
-<header class="site-header d-flex align-items-center">
-  <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
-  <nav class="d-flex gap-2 ms-auto">
-    <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
-    <a class="btn btn-outline-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
-    <a class="btn btn-brand btn-sm text-white" href="#" id="navNovoBtn"><i class="fa-solid fa-plus"></i> Novo</a>
-    <button class="btn btn-sm btn-outline-danger no-print" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
-  </nav>
+<header class="site-header navbar navbar-expand-md navbar-light">
+  <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
+    <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="headerNav">
+      <nav class="d-flex flex-column flex-md-row gap-2 ms-auto">
+        <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
+        <a class="btn btn-outline-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
+        <a class="btn btn-brand btn-sm text-white" href="#" id="navNovoBtn"><i class="fa-solid fa-plus"></i> Novo</a>
+        <button class="btn btn-sm btn-outline-danger no-print" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+      </nav>
+    </div>
+  </div>
 </header>
 
 <div class="wrap">
@@ -33,13 +40,13 @@
 <div class="card-body p-0">
 <div class="container-fluid container-wide py-3" id="conteudoOrcamento">
 
-  <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-    <div class="d-flex align-items-center gap-2">
+  <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2 mb-3 gap-2" id="orcamentoHeader">
+    <div class="d-flex align-items-center gap-2 flex-grow-1">
       <span class="brand fw-bold">Orcamento</span>
-      <input id="numeroOrcamento" class="form-control" placeholder="No do orcamento" style="width:210px">
+      <input id="numeroOrcamento" class="form-control" placeholder="No do orcamento" style="width:160px;">
     </div>
     <div class="d-flex align-items-center gap-1">
-      <input id="dataHoje" class="form-control date-input" placeholder="Data" readonly style="width:130px;text-align:right;">
+      <input id="dataHoje" class="form-control date-input" placeholder="Data" readonly style="width:120px;text-align:right;">
       <button class="btn btn-sm btn-outline-secondary" id="btnCalendar" type="button">
         <i class="fa-solid fa-calendar-day"></i>
       </button>
@@ -126,10 +133,10 @@
   </div>
 
   <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap" id="btns">
-    <button class="btn btn-outline-secondary" id="novoOrcamento" type="button"><i class="fa-solid fa-file-circle-plus"></i> Novo</button>
-    <button class="btn btn-success" id="btnSalvar" type="button"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
-    <button class="btn btn-danger" id="savePdfButton" type="button"><i class="fa-solid fa-file-pdf"></i> Baixar PDF</button>
-    <button class="btn btn-brand text-white" id="printButton" type="button"><i class="fa-solid fa-print"></i> Imprimir PDF</button>
+    <button class="btn btn-outline-secondary" id="novoOrcamento" type="button"><i class="fa-solid fa-file-circle-plus"></i> <span class="d-none d-sm-inline">Novo</span></button>
+    <button class="btn btn-success" id="btnSalvar" type="button"><i class="fa-solid fa-floppy-disk"></i> <span class="d-none d-sm-inline">Salvar</span></button>
+    <button class="btn btn-danger" id="savePdfButton" type="button"><i class="fa-solid fa-file-pdf"></i> <span class="d-none d-sm-inline">Baixar PDF</span></button>
+    <button class="btn btn-brand text-white" id="printButton" type="button"><i class="fa-solid fa-print"></i> <span class="d-none d-sm-inline">Imprimir PDF</span></button>
   </div>
 
 </div>
@@ -193,6 +200,7 @@ function criarLinha(num) {
   tr.querySelector('.row-qtd').addEventListener('input', recalc);
   tr.querySelector('.row-unit').addEventListener('input', function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
   tr.querySelector('.row-unit').addEventListener('blur',  function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
+  enableSwipeToDelete(tr);
   return tr;
 }
 
@@ -218,6 +226,80 @@ function removerLinha(btn) {
     if (n) n.textContent = i + 1;
   });
   recalc();
+}
+
+function removerLinhaDirect(tr) {
+  var tbody = $id('itemsTbody');
+  if (tbody.rows.length <= 1) {
+    tr.querySelector('.row-desc').value = '';
+    tr.querySelector('.row-qtd').value = '0';
+    tr.querySelector('.row-unit').value = 'R$ 0,00';
+    tr.querySelector('.row-total').value = 'R$ 0,00';
+    tr.style.transform = 'translateX(0)';
+    tr.style.opacity = '1';
+    recalc();
+    return;
+  }
+  tr.remove();
+  var rows = tbody.querySelectorAll('tr');
+  rows.forEach(function(r, i) {
+    var n = r.querySelector('.row-num');
+    if (n) n.textContent = i + 1;
+  });
+  recalc();
+}
+
+function enableSwipeToDelete(tr) {
+  var startX = 0;
+  var currentX = 0;
+  var isSwiping = false;
+  var maxSlide = -120;
+  
+  tr.addEventListener('touchstart', function(e) {
+    if (window.innerWidth > 576) return;
+    startX = e.touches[0].clientX;
+    tr.style.transition = 'none';
+    isSwiping = true;
+  }, { passive: true });
+  
+  tr.addEventListener('touchmove', function(e) {
+    if (!isSwiping) return;
+    currentX = e.touches[0].clientX;
+    var diffX = currentX - startX;
+    
+    if (diffX > 0) diffX = 0;
+    if (diffX < maxSlide) {
+      diffX = maxSlide + (diffX - maxSlide) * 0.3;
+    }
+    
+    tr.style.transform = 'translateX(' + diffX + 'px)';
+    tr.style.opacity = Math.max(0.4, 1 + (diffX / 200));
+  }, { passive: true });
+  
+  tr.addEventListener('touchend', function(e) {
+    if (!isSwiping) return;
+    isSwiping = false;
+    var diffX = currentX - startX;
+    tr.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    
+    if (diffX < -100) {
+      tr.style.transform = 'translateX(-100%)';
+      tr.style.opacity = '0';
+      
+      setTimeout(function() {
+        var rowNum = tr.querySelector('.row-num').textContent;
+        sysConfirm('Deseja excluir o item ' + rowNum + '?', function() {
+          removerLinhaDirect(tr);
+        }, function() {
+          tr.style.transform = 'translateX(0)';
+          tr.style.opacity = '1';
+        });
+      }, 200);
+    } else {
+      tr.style.transform = 'translateX(0)';
+      tr.style.opacity = '1';
+    }
+  });
 }
 
 /* Recalculo */
@@ -636,7 +718,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   await BudgetDB.migrateFromLocalStorage();
 
-  var fp = flatpickr('.date-input', { dateFormat: 'd/m/Y', locale: 'pt' });
+  var fp = flatpickr('.date-input', { 
+    dateFormat: 'd/m/Y', 
+    locale: 'pt',
+    defaultDate: new Date()
+  });
   $id('btnCalendar').addEventListener('click', function() { fp.open(); });
 
   buildRows(10);
