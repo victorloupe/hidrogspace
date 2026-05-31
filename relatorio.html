@@ -74,7 +74,7 @@
           <button class="btn btn-sm btn-filter" data-filter="expired">Vencidos</button>
           <button class="btn btn-sm btn-filter" data-filter="ok">Abertos</button>
         </div>
-        <div class="d-flex align-items-center gap-1 ms-md-auto mt-2 mt-md-0" style="font-size: .8rem; color: var(--text-muted);">
+        <div class="d-flex align-items-center gap-1 ms-md-auto mt-2 mt-md-0 period-container" style="font-size: .8rem; color: var(--text-muted);">
           <span>Período:</span>
           <input type="date" id="filterDateStart" class="form-control form-control-sm" style="width:130px; display:inline-block;">
           <span>até</span>
@@ -85,7 +85,7 @@
 
       <!-- Tabela -->
       <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table mb-0" style="min-width: 850px;">
           <thead>
             <tr>
               <th style="width:140px">#</th>
@@ -97,7 +97,14 @@
               <th class="no-print" style="width:125px"></th>
             </tr>
           </thead>
-          <tbody id="tbodyAll"></tbody>
+          <tbody id="tbodyAll">
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2" style="color: var(--brand);"></i>
+                <div style="font-size: 0.85rem;">Carregando orçamentos...</div>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
 
@@ -145,9 +152,14 @@ function getFiltered() {
       (activeFilter === 'soon'    && (st.key === 'soon' || st.key === 'today')) ||
       (activeFilter === 'ok'      && (st.key === 'ok' || st.key === 'open'))
     );
+    var total = o.totalNumber != null ? o.totalNumber : ((o.valores && o.valores.total)||0);
+    var formattedTotal = currencyBR(total).toLowerCase();
+    
     var passSearch = !searchQ ||
       (o.id||'').toLowerCase().includes(searchQ) ||
-      (o.clientName||'').toLowerCase().includes(searchQ);
+      (o.clientName||'').toLowerCase().includes(searchQ) ||
+      String(total).includes(searchQ) ||
+      formattedTotal.includes(searchQ);
 
     var passDates = true;
     var issue = o.issueISO || parseBRDateToISO(o.data);
@@ -232,7 +244,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (!user) return;
 
   await BudgetDB.migrateFromLocalStorage();
-  allBudgets = await BudgetDB.getAll();
+  allBudgets = (await BudgetDB.getAll()).filter(Boolean);
   renderTable();
 
   document.getElementById('searchInput').addEventListener('input', function() {
@@ -262,6 +274,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('filterDateStart').value = '';
     document.getElementById('filterDateEnd').value = '';
     renderTable();
+  });
+
+  // Mapeamento de cliques nos chips de KPI para ativar filtros
+  var chipMapping = {
+    'k_total': 'all',
+    'k_today': 'soon',
+    'k_soon': 'soon',
+    'k_expired': 'expired',
+    'k_open': 'ok'
+  };
+  Object.keys(chipMapping).forEach(function(chipId) {
+    var element = document.getElementById(chipId);
+    if (element) {
+      var chipEl = element.closest('.chip');
+      if (chipEl) {
+        chipEl.classList.add('chip-clickable');
+        chipEl.addEventListener('click', function() {
+          var targetFilter = chipMapping[chipId];
+          var btn = document.querySelector('.btn-filter[data-filter="' + targetFilter + '"]');
+          if (btn) btn.click();
+        });
+      }
+    }
   });
 });
 </script>

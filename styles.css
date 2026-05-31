@@ -38,6 +38,9 @@ body {
 .site-header img { height: 50px; flex-shrink: 0; }
 
 @media (max-width: 768px) {
+  body {
+    padding-top: 92px !important;
+  }
   .site-header {
     height: auto !important;
     min-height: var(--header-h);
@@ -238,22 +241,25 @@ body {
 @media (max-width: 576px) {
   #orcamentoHeader {
     flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 12px !important;
+    align-items: center !important;
+    gap: 8px !important;
   }
   #orcamentoHeader > div {
     width: 100% !important;
+    justify-content: center !important;
   }
   #numeroOrcamento {
-    width: 100% !important;
+    width: 160px !important;
+    text-align: center !important;
   }
   #orcamentoHeader .d-flex.align-items-center.gap-1 {
-    width: 100% !important;
+    width: auto !important;
+    justify-content: center !important;
   }
   #conteudoOrcamento .date-input {
-    flex-grow: 1 !important;
-    width: auto !important;
-    text-align: left !important;
+    width: 120px !important;
+    text-align: center !important;
+    flex-grow: 0 !important;
   }
 
   #itemsTable, 
@@ -295,8 +301,8 @@ body {
     grid-column: span 11;
   }
   
-  /* Evita barra de rolagem horizontal ao arrastar para excluir */
-  .table-responsive {
+  /* Evita barra de rolagem horizontal ao arrastar para excluir no cadastro */
+  #conteudoOrcamento .table-responsive {
     overflow-x: hidden !important;
   }
   
@@ -347,4 +353,78 @@ body {
     font-weight: 600;
     text-transform: uppercase;
   }
+  
+  /* Ajuste para o container de período no relatório */
+  .period-container {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 10px !important;
+  }
+  .period-container input[type="date"] {
+    flex: 1 !important;
+    width: 0 !important;
+    min-width: 100px !important;
+  }
+  
+  /* Ajuste dos KPI Cards no Mobile */
+  .kpi-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding: 12px 14px !important;
+  }
+  .kpi-card .fw-bold {
+    font-size: 0.9rem !important;
+    white-space: nowrap !important;
+  }
+  .kpi-card .text-muted {
+    font-size: 0.72rem !important;
+  }
+}
+
+/* KPI Chips clicáveis com efeito premium hover */
+.chip-clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+.chip-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+/* Toast flutuante premium */
+.sys-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10000;
+  font-size: 0.88rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+.sys-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.sys-toast-success-icon {
+  color: #10b981;
+  font-size: 1.1rem;
+}
+.sys-toast-info-icon {
+  color: #3b82f6;
+  font-size: 1.1rem;
 }

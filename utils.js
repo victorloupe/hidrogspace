@@ -293,3 +293,194 @@ function sysConfirm(message, onConfirm, onCancel) {
     if (onCancel) onCancel();
   });
 }
+
+// Inserir 10 orçamentos de teste (Semear banco)
+async function insertSeeds() {
+  var budgets = [
+    {
+      id: "SEED-001",
+      tipo: "Orcamento",
+      data: "20/05/2026",
+      issue_iso: "2026-05-20",
+      due_iso: "2026-06-20",
+      client_name: "João Silva",
+      total_number: 1500,
+      client: { name: "João Silva", cnpj: "11.222.333/0001-44", ie: "Isento", address: "Av. Brasil 100", phone1: "(17) 99999-1111" },
+      valores: { subtotal: 1500, total: 1500, frete: 0, desconto: 0 },
+      extras: { validade: "30 dias", prazo_entrega: "Imediato", garantia: "1 ano", condicoes_pagto: "A vista" },
+      items: [{ id: 1, qtd: 1, descricao: "Bomba Submersa 1HP HidroG", unitario: 1500, total: 1500 }]
+    },
+    {
+      id: "SEED-002",
+      tipo: "Orcamento",
+      data: "25/05/2026",
+      issue_iso: "2026-05-25",
+      due_iso: "2026-06-25",
+      client_name: "Maria Santos",
+      total_number: 2300,
+      client: { name: "Maria Santos", cnpj: "22.333.444/0001-55", ie: "", address: "Rua das Flores 250", phone1: "(17) 98888-2222" },
+      valores: { subtotal: 2300, total: 2300, frete: 0, desconto: 0 },
+      extras: { validade: "30 dias", prazo_entrega: "3 dias", garantia: "1 ano", condicoes_pagto: "Boleto 30 dias" },
+      items: [{ id: 1, qtd: 1, descricao: "Quadro de Comando Monofásico", unitario: 800, total: 800 }, { id: 2, qtd: 1, descricao: "Bomba Submersa 0.5HP", unitario: 1500, total: 1500 }]
+    },
+    {
+      id: "SEED-003",
+      tipo: "Orcamento",
+      data: "30/05/2026",
+      issue_iso: "2026-05-30",
+      due_iso: "2026-05-30",
+      client_name: "Pedro Oliveira (Vence Hoje)",
+      total_number: 980,
+      client: { name: "Pedro Oliveira", cnpj: "", ie: "", address: "Rua Principal 45", phone1: "(17) 97777-3333" },
+      valores: { subtotal: 980, total: 980, frete: 0, desconto: 0 },
+      extras: { validade: "0 dias", prazo_entrega: "Imediato", garantia: "90 dias", condicoes_pagto: "PIX" },
+      items: [{ id: 1, qtd: 2, descricao: "Cabo Elétrico Subterrâneo PP 4mm (m)", unitario: 490, total: 980 }]
+    },
+    {
+      id: "SEED-004",
+      tipo: "Orcamento",
+      data: "15/05/2026",
+      issue_iso: "2026-05-15",
+      due_iso: "2026-05-25",
+      client_name: "Ana Souza (Vencido)",
+      total_number: 3400,
+      client: { name: "Ana Souza", cnpj: "33.444.555/0001-66", ie: "", address: "Av. Saudade 1200", phone1: "(17) 96666-4444" },
+      valores: { subtotal: 3400, total: 3400, frete: 0, desconto: 0 },
+      extras: { validade: "10 dias", prazo_entrega: "5 dias", garantia: "1 ano", condicoes_pagto: "3x Cartão" },
+      items: [{ id: 1, qtd: 1, descricao: "Bomba Submersa 2HP Trifásica", unitario: 3400, total: 3400 }]
+    },
+    {
+      id: "SEED-005",
+      tipo: "Orcamento",
+      data: "28/05/2026",
+      issue_iso: "2026-05-28",
+      due_iso: "2026-06-05",
+      client_name: "Lucas Pereira (Vence em breve)",
+      total_number: 4120,
+      client: { name: "Lucas Pereira", cnpj: "", ie: "", address: "Sítio Primavera", phone1: "(17) 95555-5555" },
+      valores: { subtotal: 4120, total: 4120, frete: 0, desconto: 0 },
+      extras: { validade: "8 dias", prazo_entrega: "Imediato", garantia: "1 ano", condicoes_pagto: "A vista" },
+      items: [{ id: 1, qtd: 1, descricao: "Kit Solar de Bombeamento 500W", unitario: 4120, total: 4120 }]
+    },
+    {
+      id: "SEED-006",
+      tipo: "Orcamento",
+      data: "29/05/2026",
+      issue_iso: "2026-05-29",
+      due_iso: "2026-06-08",
+      client_name: "Hidrominas Poços (Vence em breve)",
+      total_number: 8500,
+      client: { name: "Hidrominas Poços", cnpj: "44.555.666/0001-77", ie: "123.456.789", address: "Distrito Industrial", phone1: "(17) 3216-1234" },
+      valores: { subtotal: 8500, total: 8500, frete: 0, desconto: 0 },
+      extras: { validade: "10 dias", prazo_entrega: "7 dias", garantia: "2 anos", condicoes_pagto: "Faturado 30/60 dias" },
+      items: [{ id: 1, qtd: 1, descricao: "Tubulação de Aço Galvanizado 3 pol (barra)", unitario: 8500, total: 8500 }]
+    },
+    {
+      id: "SEED-007",
+      tipo: "Orcamento",
+      data: "10/05/2026",
+      issue_iso: "2026-05-10",
+      due_iso: "2026-05-20",
+      client_name: "Construtora Alfa (Vencido)",
+      total_number: 12500,
+      client: { name: "Construtora Alfa", cnpj: "55.666.777/0001-88", ie: "987.654.321", address: "Av. Juscelino Kubitschek", phone1: "(17) 3222-9988" },
+      valores: { subtotal: 12500, total: 12500, frete: 0, desconto: 0 },
+      extras: { validade: "10 dias", prazo_entrega: "10 dias", garantia: "1 ano", condicoes_pagto: "Faturado 4x" },
+      items: [{ id: 1, qtd: 5, descricao: "Bomba Pressurizadora Rowa", unitario: 2500, total: 12500 }]
+    },
+    {
+      id: "SEED-008",
+      tipo: "Orcamento",
+      data: "22/05/2026",
+      issue_iso: "2026-05-22",
+      due_iso: "2026-06-22",
+      client_name: "Fazenda Sol Nascente",
+      total_number: 5900,
+      client: { name: "Fazenda Sol Nascente", cnpj: "", ie: "", address: "Rodovia BR-153 Km 45", phone1: "(17) 94444-6666" },
+      valores: { subtotal: 5900, total: 5900, frete: 0, desconto: 0 },
+      extras: { validade: "30 dias", prazo_entrega: "Imediato", garantia: "1 ano", condicoes_pagto: "Dinheiro" },
+      items: [{ id: 1, qtd: 1, descricao: "Bomba Submersa 3HP Leão", unitario: 5900, total: 5900 }]
+    },
+    {
+      id: "SEED-009",
+      tipo: "Orcamento",
+      data: "24/05/2026",
+      issue_iso: "2026-05-24",
+      due_iso: "2026-06-24",
+      client_name: "Condomínio Flores",
+      total_number: 3100,
+      client: { name: "Condomínio Flores", cnpj: "66.777.888/0001-99", ie: "", address: "Rua Alameda das Palmeiras", phone1: "(17) 3216-9900" },
+      valores: { subtotal: 3100, total: 3100, frete: 0, desconto: 0 },
+      extras: { validade: "30 dias", prazo_entrega: "2 dias", garantia: "1 ano", condicoes_pagto: "Boleto" },
+      items: [{ id: 1, qtd: 1, descricao: "Manutenção Preventiva de Conjunto Motobomba", unitario: 3100, total: 3100 }]
+    },
+    {
+      id: "SEED-010",
+      tipo: "Orcamento",
+      data: "30/05/2026",
+      issue_iso: "2026-05-30",
+      due_iso: "2026-05-30",
+      client_name: "Marcos Lima (Vence Hoje)",
+      total_number: 1750,
+      client: { name: "Marcos Lima", cnpj: "", ie: "", address: "Rua do Comércio 550", phone1: "(17) 93333-7777" },
+      valores: { subtotal: 1750, total: 1750, frete: 0, desconto: 0 },
+      extras: { validade: "0 dias", prazo_entrega: "Imediato", garantia: "1 ano", condicoes_pagto: "PIX" },
+      items: [{ id: 1, qtd: 1, descricao: "Inversor de Frequência CFW300", unitario: 1750, total: 1750 }]
+    }
+  ];
+
+  console.log("Iniciando inserção...");
+  try {
+    for (var i = 0; i < budgets.length; i++) {
+      var b = budgets[i];
+      // Converte as propriedades para o formato que a tabela do banco espera
+      var row = {
+        id: b.id,
+        tipo: b.tipo,
+        data: b.data,
+        issue_iso: b.issue_iso,
+        due_iso: b.due_iso,
+        client_name: b.client_name,
+        total_number: b.total_number,
+        client: b.client,
+        valores: b.valores,
+        extras: b.extras,
+        items: b.items
+      };
+      await getSupa().from('budgets').upsert(row, {onConflict:'id'});
+      console.log("Inserido/atualizado: " + b.id);
+    }
+    sysAlert("10 orçamentos de teste foram inseridos com sucesso! Atualize a página.");
+  } catch (err) {
+    console.error(err);
+    sysAlert("Erro ao inserir dados de teste: " + err.message);
+  }
+}
+
+// Exibir Notificação Flutuante (Toast)
+function showToast(msg, type) {
+  type = type || 'info'; // 'info' ou 'success'
+  var existing = document.querySelector('.sys-toast');
+  if (existing) existing.remove();
+
+  var toast = document.createElement('div');
+  toast.className = 'sys-toast';
+  
+  var iconHtml = type === 'success' 
+    ? '<i class="fa-solid fa-circle-check sys-toast-success-icon"></i>' 
+    : '<i class="fa-solid fa-circle-info sys-toast-info-icon"></i>';
+
+  toast.innerHTML = iconHtml + '<span>' + msg + '</span>';
+  document.body.appendChild(toast);
+
+  // Trigger layout reflow
+  toast.offsetHeight;
+  toast.classList.add('show');
+
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() {
+      toast.remove();
+    }, 300);
+  }, 3000);
+}

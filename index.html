@@ -127,7 +127,14 @@
               <th>Emissao</th><th>Validade</th><th>Status</th><th></th>
             </tr>
           </thead>
-          <tbody id="tbodySoon"></tbody>
+          <tbody id="tbodySoon">
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2" style="color: var(--brand);"></i>
+                <div style="font-size: 0.85rem;">Carregando orçamentos...</div>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -145,7 +152,7 @@ function makeBadge(st) {
 
 async function renderPage() {
   var today = todayISO();
-  var all = await BudgetDB.getAll();
+  var all = (await BudgetDB.getAll()).filter(Boolean);
 
   // KPIs
   var kpi = {

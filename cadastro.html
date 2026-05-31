@@ -170,9 +170,6 @@
 <script>
 var $id = function(id) { return document.getElementById(id); };
 
-function showToast(msg) {
-  sysAlert(msg);
-}
 function setVal(id, v) { var el = $id(id); if (el) el.value = (v != null ? v : ''); }
 function getVal(id) { return ($id(id) ? $id(id).value : '').trim(); }
 function onlyDigits(s) { return String(s || '').replace(/\D/g, ''); }
@@ -200,12 +197,21 @@ function criarLinha(num) {
   tr.querySelector('.row-qtd').addEventListener('input', recalc);
   tr.querySelector('.row-unit').addEventListener('input', function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
   tr.querySelector('.row-unit').addEventListener('blur',  function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
+  
+  // Adiciona nova linha automaticamente se esta for a última e o usuário digitar nela
+  tr.querySelector('.row-desc').addEventListener('input', function(e) {
+    var tbody = $id('itemsTbody');
+    if (tr === tbody.rows[tbody.rows.length - 1] && e.target.value.trim() !== '') {
+      addRow();
+    }
+  });
+
   enableSwipeToDelete(tr);
   return tr;
 }
 
 function buildRows(n) {
-  n = n || 10;
+  n = n || 3;
   var tbody = $id('itemsTbody');
   tbody.innerHTML = '';
   for (var i = 1; i <= n; i++) tbody.appendChild(criarLinha(i));
@@ -333,8 +339,8 @@ function validarCPF(cpf) {
 
 async function buscarDocumento() {
   var digits = onlyDigits(getVal('clientCNPJ'));
-  if (digits.length === 11) { showToast(validarCPF(digits) ? 'CPF valido.' : 'CPF invalido.'); return; }
-  if (digits.length < 14) { showToast('CNPJ incompleto: faltam ' + (14-digits.length) + ' digito(s).'); return; }
+  if (digits.length === 11) { showToast(validarCPF(digits) ? 'CPF válido!' : 'CPF inválido!', validarCPF(digits) ? 'success' : 'info'); return; }
+  if (digits.length < 14) { showToast('CNPJ incompleto: faltam ' + (14-digits.length) + ' dígito(s).', 'info'); return; }
   var cnpj = digits.slice(0, 14);
   var sources = [
     'https://brasilapi.com.br/api/cnpj/v1/' + cnpj,
@@ -354,15 +360,15 @@ async function buscarDocumento() {
     setVal('clientState',        (e.estado&&e.estado.sigla)||d.uf||'');
     var cep = String(e.cep||d.cep||'').replace(/\D/g,'').replace(/(\d{5})(\d{3})/,'$1-$2');
     if (cep) setVal('clientCEP', cep);
-    showToast('Dados do CNPJ preenchidos.');
+    showToast('Dados do CNPJ preenchidos!', 'success');
     return;
   }
-  showToast('Nao foi possivel consultar o CNPJ.');
+  showToast('Não foi possível consultar o CNPJ.', 'info');
 }
 
 async function buscarCEP() {
   var cep = onlyDigits(getVal('clientCEP')).slice(0, 8);
-  if (cep.length < 8) { showToast('CEP incompleto: faltam ' + (8-cep.length) + ' digito(s).'); return; }
+  if (cep.length < 8) { showToast('CEP incompleto: faltam ' + (8-cep.length) + ' dígito(s).', 'info'); return; }
   var fmt = cep.replace(/(\d{5})(\d{3})/, '$1-$2');
   var d = await fetchJSON('https://viacep.com.br/ws/' + cep + '/json/')
        || await fetchJSON('https://brasilapi.com.br/api/cep/v2/' + cep);
@@ -372,9 +378,9 @@ async function buscarCEP() {
     setVal('clientCity',         d.localidade||d.city||'');
     setVal('clientState',        d.uf||d.state||'');
     setVal('clientCEP', fmt);
-    showToast('Endereco preenchido pelo CEP.');
+    showToast('Endereço preenchido pelo CEP!', 'success');
   } else {
-    showToast('CEP nao encontrado.');
+    showToast('CEP não encontrado.', 'info');
   }
 }
 
@@ -449,7 +455,7 @@ function loadBudgetIntoForm(b) {
   setVal('paymentConditions', x.pagamento || '');
   setVal('notes',             x.obs       || '');
   var items = b.items || [];
-  buildRows(Math.max(items.length, 10));
+  buildRows(Math.max(items.length, 3));
   items.forEach(function(it, i) {
     var tr = $id('itemsTbody').rows[i];
     if (!tr) return;
@@ -464,11 +470,11 @@ function loadBudgetIntoForm(b) {
 /* Salvar */
 async function saveBudget() {
   var b = getBudgetFromForm();
-  if (!b.id) { showToast('Informe o numero do orcamento.'); return; }
+  if (!b.id) { showToast('Informe o número do orçamento.', 'info'); return; }
   await BudgetDB.save(b);
   try { localStorage.removeItem('budgetDraft'); } catch(e) {}
-  showToast('Orcamento salvo!');
-  setTimeout(function() { window.location.href = 'index.html'; }, 800);
+  showToast('Orçamento salvo com sucesso!', 'success');
+  setTimeout(function() { window.location.href = 'index.html'; }, 1000);
 }
 
 /* Reset */
@@ -477,7 +483,7 @@ function resetForm() {
     localStorage.removeItem('currentBudgetId');
     localStorage.removeItem('budgetDraft');
   } catch(e) {}
-  buildRows(10);
+  buildRows(3);
   ['clientCNPJ','clientIE','clientName','clientPhone1','clientPhone2','clientPhone3',
    'clientAddress','clientCEP','clientNeighborhood','clientCity','clientState',
    'warranty','deliveryTime','proposalValidity','paymentConditions','notes']
@@ -725,11 +731,39 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
   $id('btnCalendar').addEventListener('click', function() { fp.open(); });
 
-  buildRows(10);
+  buildRows(3);
   setVal('numeroOrcamento', gerarNumeroDiario());
   setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
   setVal('frete',    moneyMask('0'));
   setVal('desconto', moneyMask('0'));
+
+  // Máscara inteligente para telefones
+  function maskPhone(value) {
+    if (!value) return "";
+    value = value.replace(/\D/g, "");
+    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 10) {
+      return "(" + value.slice(0, 2) + ") " + value.slice(2, 7) + "-" + value.slice(7);
+    } else if (value.length > 6) {
+      return "(" + value.slice(0, 2) + ") " + value.slice(2, 6) + "-" + value.slice(6);
+    } else if (value.length > 2) {
+      return "(" + value.slice(0, 2) + ") " + value.slice(2);
+    } else if (value.length > 0) {
+      return "(" + value;
+    }
+    return "";
+  }
+  document.querySelectorAll('.phone').forEach(function(input) {
+    input.addEventListener('input', function() {
+      var selectionStart = this.selectionStart;
+      var previousLength = this.value.length;
+      var clean = this.value.replace(/\D/g, "");
+      this.value = maskPhone(clean);
+      var currentLength = this.value.length;
+      var difference = currentLength - previousLength;
+      this.setSelectionRange(selectionStart + difference, selectionStart + difference);
+    });
+  });
 
   /* Carrega para edicao ou duplicacao */
   var editId = null;
