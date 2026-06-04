@@ -80,7 +80,8 @@
     </div>
     <div class="col-12">
       <label class="form-label">Nome / Razao Social</label>
-      <input id="clientName" class="form-control">
+      <input id="clientName" class="form-control" list="clientsDatalist">
+      <datalist id="clientsDatalist"></datalist>
     </div>
     <div class="col-md-4"><label class="form-label">Telefone 1</label><input id="clientPhone1" class="form-control phone"></div>
     <div class="col-md-4"><label class="form-label">Telefone 2</label><input id="clientPhone2" class="form-control phone"></div>
@@ -471,10 +472,23 @@ function loadBudgetIntoForm(b) {
 async function saveBudget() {
   var b = getBudgetFromForm();
   if (!b.id) { showToast('Informe o número do orçamento.', 'info'); return; }
-  await BudgetDB.save(b);
-  try { localStorage.removeItem('budgetDraft'); } catch(e) {}
-  showToast('Orçamento salvo com sucesso!', 'success');
-  setTimeout(function() { window.location.href = 'index.html'; }, 1000);
+  
+  var btn = $id('btnSalvar');
+  var origHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Salvando...</span>';
+
+  try {
+    await BudgetDB.save(b);
+    try { localStorage.removeItem('budgetDraft'); } catch(e) {}
+    showToast('Orçamento salvo com sucesso!', 'success');
+    setTimeout(function() { window.location.href = 'index.html'; }, 1000);
+  } catch (err) {
+    console.error(err);
+    showToast('Erro ao salvar o orçamento.', 'info');
+    btn.disabled = false;
+    btn.innerHTML = origHTML;
+  }
 }
 
 /* Reset */
@@ -540,8 +554,11 @@ async function gerarPDF(download) {
   doc.setDrawColor(14, 165, 233).setLineWidth(0.6).line(ML, y, MR, y);
   y += 6;
 
+  var title = b.tipo || 'Orçamento';
+  if (title.toLowerCase() === 'orcamento') title = 'Orçamento';
+
   doc.setFontSize(13).setFont(undefined, 'bold').setTextColor(14, 165, 233);
-  doc.text((b.tipo || 'Orcamento') + '  No ' + b.id, ML, y);
+  doc.text(title + ' - ' + b.id, PW / 2, y, { align: 'center' });
   doc.setFontSize(9).setFont(undefined, 'normal').setTextColor(60, 60, 60);
   doc.text('Data: ' + (b.data || ''), MR, y, { align: 'right' });
   y += 4;
@@ -723,6 +740,64 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (!user) return;
 
   await BudgetDB.migrateFromLocalStorage();
+
+  // Coleta dados dos clientes anteriores para autocomplete
+  var allBudgets = [];
+  try {
+    allBudgets = await BudgetDB.getAll();
+  } catch(e) { console.error(e); }
+  
+  var clientsMap = {};
+  allBudgets.forEach(function(b) {
+    var name = b.clientName || (b.client && b.client.name);
+    if (name) {
+      var key = name.toLowerCase().trim();
+      if (!clientsMap[key]) {
+        var c = b.client || {};
+        clientsMap[key] = {
+          name: name.trim(),
+          doc: c.cnpj || c.doc || (b.extras && b.extras.clientCNPJ) || '',
+          ie: c.ie || (b.extras && b.extras.clientIE) || '',
+          phone1: c.phone1 || '',
+          phone2: c.phone2 || '',
+          phone3: c.phone3 || '',
+          address: c.address || '',
+          cep: c.cep || '',
+          neighborhood: c.neighborhood || '',
+          city: c.city || '',
+          state: c.state || ''
+        };
+      }
+    }
+  });
+
+  var datalist = document.getElementById('clientsDatalist');
+  if (datalist) {
+    Object.keys(clientsMap).forEach(function(key) {
+      var opt = document.createElement('option');
+      opt.value = clientsMap[key].name;
+      datalist.appendChild(opt);
+    });
+  }
+
+  // Preenche dados cadastrais ao selecionar um cliente conhecido
+  $id('clientName').addEventListener('input', function() {
+    var val = this.value.toLowerCase().trim();
+    if (clientsMap[val]) {
+      var c = clientsMap[val];
+      setVal('clientCNPJ',         c.doc || '');
+      setVal('clientIE',           c.ie || '');
+      setVal('clientPhone1',       c.phone1 || '');
+      setVal('clientPhone2',       c.phone2 || '');
+      setVal('clientPhone3',       c.phone3 || '');
+      setVal('clientAddress',      c.address || '');
+      setVal('clientCEP',          c.cep || '');
+      setVal('clientNeighborhood', c.neighborhood || '');
+      setVal('clientCity',         c.city || '');
+      setVal('clientState',        c.state || '');
+      showToast('Dados do cliente preenchidos automaticamente!', 'success');
+    }
+  });
 
   var fp = flatpickr('.date-input', { 
     dateFormat: 'd/m/Y', 

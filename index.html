@@ -129,9 +129,12 @@
           </thead>
           <tbody id="tbodySoon">
             <tr>
-              <td colspan="7" class="text-center py-5 text-muted">
-                <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2" style="color: var(--brand);"></i>
-                <div style="font-size: 0.85rem;">Carregando orçamentos...</div>
+              <td colspan="7" class="text-center py-4">
+                <div class="water-loader">
+                  <div class="drop"></div>
+                  <div class="wave"></div>
+                  <div class="loader-text">Carregando orçamentos...</div>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -151,8 +154,16 @@ function makeBadge(st) {
 }
 
 async function renderPage() {
+  var startTime = Date.now();
   var today = todayISO();
   var all = (await BudgetDB.getAll()).filter(Boolean);
+
+  // Garante que o efeito completo da gota (1.8s) seja finalizado antes de renderizar
+  var elapsed = Date.now() - startTime;
+  var minDuration = 1800;
+  if (elapsed < minDuration) {
+    await new Promise(function(resolve) { setTimeout(resolve, minDuration - elapsed); });
+  }
 
   // KPIs
   var kpi = {

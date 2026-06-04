@@ -206,16 +206,18 @@ body {
   body { padding-top: 0 !important; background: #fff !important; font-size: 9pt; }
   .site-header, header, nav, #btns, .toast-container,
   .no-print, .row-remove-btn, #btnAddRow { display: none !important; }
-  .wrap { padding: 0 !important; max-width: none !important; }
+  .wrap { padding: 35px 0 0 0 !important; max-width: none !important; }
   .card { border: none !important; box-shadow: none !important; border-radius: 0 !important; }
+  .chip-clickable.active-filter { transform: none !important; box-shadow: 0 0 0 2px currentColor !important; }
   .container-wide { border-radius: 0 !important; padding: 0 !important; box-shadow: none !important; }
   input, textarea, select {
     border: none !important; box-shadow: none !important;
     background: transparent !important; -webkit-appearance: none;
   }
-  table { font-size: 8pt !important; }
+  table { font-size: 8pt !important; min-width: 100% !important; width: 100% !important; }
   th, td { padding: 3px 4px !important; }
   #itemsTable th:last-child, #itemsTable td:last-child { display: none !important; }
+  .table-responsive { overflow: visible !important; overflow-x: visible !important; }
 }
 
 /* ── Tela de Login ───────────────────────────────────────── */
@@ -427,4 +429,176 @@ body {
 .sys-toast-info-icon {
   color: #3b82f6;
   font-size: 1.1rem;
+}
+
+/* Efeito de gota de água e ondulação de carregamento */
+.water-loader {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 15px auto;
+}
+
+.water-loader .drop {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  top: 15px;
+  background: var(--brand);
+  border-radius: 50%;
+  animation: drip 1.8s infinite cubic-bezier(0.6, 0.05, 0.9, 0.15);
+}
+
+.water-loader .drop::before {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 20px solid var(--brand);
+  top: -15px;
+  left: 0;
+}
+
+.water-loader .wave {
+  position: absolute;
+  opacity: 0;
+  top: 100px;
+  width: 2px;
+  height: 1px;
+  border: var(--brand) 4px solid;
+  border-radius: 300px / 150px;
+  animation: ripple 1.8s infinite;
+}
+
+.water-loader .wave::after {
+  content: "";
+  position: absolute;
+  opacity: 0;
+  top: -5px;
+  left: -5px;
+  width: 2px;
+  height: 1px;
+  border: var(--brand) 3px solid;
+  border-radius: 300px / 150px;
+  animation: ripple-two 1.8s infinite;
+}
+
+.water-loader .loader-text {
+  position: absolute;
+  bottom: 0px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+@keyframes drip {
+  0% {
+    top: 15px;
+    opacity: 1;
+  }
+  65% {
+    top: 100px;
+    opacity: 1;
+  }
+  65.1%, 100% {
+    top: 100px;
+    opacity: 0;
+  }
+}
+
+@keyframes ripple {
+  0%, 65% {
+    opacity: 0;
+    width: 2px;
+    height: 1px;
+    top: 100px;
+  }
+  66% {
+    opacity: 1;
+    width: 2px;
+    height: 1px;
+    top: 100px;
+  }
+  100% {
+    width: 200px;
+    height: 60px;
+    border-width: 1px;
+    top: 70px;
+    opacity: 0;
+  }
+}
+
+@keyframes ripple-two {
+  0%, 75% {
+    opacity: 0;
+    width: 2px;
+    height: 1px;
+    top: -5px;
+    left: -5px;
+  }
+  76% {
+    opacity: 1;
+    width: 2px;
+    height: 1px;
+    top: -5px;
+    left: -5px;
+  }
+  100% {
+    width: 100px;
+    height: 30px;
+    border-width: 1px;
+    top: -15px;
+    left: -50px;
+    opacity: 0;
+  }
+}
+
+/* Transição suave/cascata ao carregar os dados das tabelas */
+.table tbody tr {
+  opacity: 0;
+  animation: fadeInRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.25s; }
+.table tbody tr:nth-child(6) { animation-delay: 0.3s; }
+.table tbody tr:nth-child(7) { animation-delay: 0.35s; }
+.table tbody tr:nth-child(8) { animation-delay: 0.4s; }
+.table tbody tr:nth-child(9) { animation-delay: 0.45s; }
+.table tbody tr:nth-child(10) { animation-delay: 0.5s; }
+
+@keyframes fadeInRow {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Destaque interativo com transição suave ao passar o mouse sobre as linhas da tabela */
+.table tbody tr td {
+  transition: background-color 0.2s ease !important;
+}
+
+.table tbody tr:hover td {
+  background-color: var(--brand-50) !important; /* Azul bem clarinho (brand-50) */
+}
+
+/* Destaque para KPI chip ativo */
+.chip-clickable.active-filter {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08), 0 0 0 2.5px currentColor !important;
 }
