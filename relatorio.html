@@ -95,7 +95,7 @@
               <th style="width:115px; cursor:pointer;" class="sortable-th" data-sort="issue">Emissao <i class="fa-solid fa-sort ms-1 opacity-50"></i></th>
               <th style="width:115px; cursor:pointer;" class="sortable-th" data-sort="due">Validade <i class="fa-solid fa-sort ms-1 opacity-50"></i></th>
               <th style="width:140px">Status</th>
-              <th class="no-print" style="width:125px"></th>
+              <th class="no-print" style="width:165px"></th>
             </tr>
           </thead>
           <tbody id="tbodyAll">
@@ -277,7 +277,7 @@ function renderTable() {
       '<td class="text-muted">' + fmtBR(issue) + '</td>' +
       '<td class="text-muted">' + fmtBR(due) + '</td>' +
       '<td>' + makeBadge(st) + '</td>' +
-      '<td class="no-print">' +
+      '<td class="no-print text-nowrap">' +
         '<a class="btn btn-sm btn-outline-secondary btn-table-action me-1" href="cadastro.html?id=' + encodeURIComponent(o.id) + '" title="Editar"><i class="fa-solid fa-pen-to-square"></i></a>' +
         '<button class="btn btn-sm btn-outline-success btn-table-action btn-print me-1" data-id="' + o.id + '" title="Imprimir"><i class="fa-solid fa-print"></i></button>' +
         '<a class="btn btn-sm btn-outline-primary btn-table-action me-1" href="cadastro.html?duplicateId=' + encodeURIComponent(o.id) + '" title="Duplicar"><i class="fa-regular fa-copy"></i></a>' +
