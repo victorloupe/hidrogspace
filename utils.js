@@ -742,7 +742,7 @@ async function gerarPDF(b, download) {
 
     if (x.obs) {
       y = plainTable(y,
-        [[lbl('Observacoes:'), x.obs]],
+        [[lbl('Observações:'), x.obs]],
         { 0: { cellWidth: 40 }, 1: { cellWidth: 'auto', overflow: 'linebreak' } }
       );
     }
