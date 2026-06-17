@@ -645,7 +645,7 @@ async function gerarPDF(b, download) {
   /* Linha 3: Endereco ocupa coluna larga com linebreak; CEP em coluna separada
      Col 0: label 26mm | Col 1: rua+bairro (auto, linebreak) | Col 2: label 16mm | Col 3: valor 38mm */
   y = plainTable(y, [
-    [lbl('Endereco:'), street + (cityUF ? '\n' + cityUF : ''), lbl('CEP:'), c.cep || '-']
+    [lbl('Endereço:'), street + (cityUF ? '\n' + cityUF : ''), lbl('CEP:'), c.cep || '-']
   ], {
     0: { cellWidth: 26 },
     1: { cellWidth: 'auto', overflow: 'linebreak' },
@@ -667,7 +667,7 @@ async function gerarPDF(b, download) {
     startY: y, margin: { left: ML, right: ML },
     head: [[
       { content: '#', styles: { halign: 'center' } },
-      'Descricao',
+      'Descrição',
       { content: 'Qtd', styles: { halign: 'center' } },
       { content: 'Valor Unit.', styles: { halign: 'right' } },
       { content: 'Total', styles: { halign: 'right' } }
