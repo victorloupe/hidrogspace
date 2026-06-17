@@ -484,3 +484,15 @@ function showToast(msg, type) {
     }, 300);
   }, 3000);
 }
+
+/* ── Carregamento de Logo Customizada ────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  var logoImg = document.getElementById('logoImg');
+  if (logoImg) {
+    var customLogo = localStorage.getItem('customLogo');
+    if (customLogo) {
+      logoImg.src = customLogo;
+    }
+  }
+});
+

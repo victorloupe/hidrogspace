@@ -42,8 +42,8 @@
 
   <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2 mb-3 gap-2" id="orcamentoHeader">
     <div class="d-flex align-items-center gap-2 flex-grow-1">
-      <span class="brand fw-bold">Orcamento</span>
-      <input id="numeroOrcamento" class="form-control" placeholder="No do orcamento" style="width:160px;">
+      <span class="brand fw-bold">Orçamento</span>
+      <input id="numeroOrcamento" class="form-control" placeholder="Nº do orçamento" style="width:160px;">
     </div>
     <div class="d-flex align-items-center gap-1">
       <input id="dataHoje" class="form-control date-input" placeholder="Data" readonly style="width:120px;text-align:right;">
@@ -55,7 +55,18 @@
 
   <div class="row mb-3">
     <div class="col-md-7">
-      <img src="logohidrog.png" alt="Logo Hidro G" class="img-fluid" style="max-height:110px;" id="logoImg">
+      <div class="logo-container position-relative d-inline-block">
+        <img src="orcamento.png" alt="Logo Hidro G" class="img-fluid" style="max-height:110px;" id="logoImg">
+        <div class="logo-actions mt-1 no-print">
+          <input type="file" id="logoUploadInput" accept="image/*" class="d-none">
+          <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;" onclick="document.getElementById('logoUploadInput').click()">
+            <i class="fa-solid fa-image me-1"></i> Alterar Logo
+          </button>
+          <button type="button" id="btnResetLogo" class="btn btn-sm btn-outline-danger py-1 px-2 d-none" style="font-size: 0.75rem;" onclick="restaurarLogoPadrao()">
+            <i class="fa-solid fa-trash me-1"></i> Restaurar
+          </button>
+        </div>
+      </div>
     </div>
     <div class="col-md-5 text-md-end">
       <p class="brand fw-bold mb-0" style="font-size:1.05rem;">HIDRO G BOMBAS SUBMERSAS LTDA.</p>
@@ -68,7 +79,7 @@
     </div>
   </div>
 
-  <div class="section-header">Informacoes do Cliente</div>
+  <div class="section-header">Informações do Cliente</div>
   <div class="row g-2">
     <div class="col-md-6">
       <label class="form-label">CPF / CNPJ</label>
@@ -94,7 +105,7 @@
   </div>
 
   <div class="section-header d-flex justify-content-between align-items-center">
-    <span>Itens do Orcamento</span>
+    <span>Itens do Orçamento</span>
     <button class="btn btn-sm btn-outline-primary no-print" id="btnAddRow" type="button">
       <i class="fa-solid fa-plus"></i> Adicionar item
     </button>
@@ -124,7 +135,7 @@
     </div>
   </div>
 
-  <div class="section-header">Informacoes Complementares</div>
+  <div class="section-header">Informações Complementares</div>
   <div class="row g-2">
     <div class="col-md-6"><label class="form-label">Garantia</label><input id="warranty" class="form-control"></div>
     <div class="col-md-6"><label class="form-label">Prazo de Entrega</label><input id="deliveryTime" class="form-control"></div>
@@ -525,14 +536,46 @@ async function gerarPDF(download) {
 
   /* Carrega logo local */
   var logoData = null;
+  var logoWidth = 62;
+  var logoHeight = 28;
   try {
-    var r = await fetch($id('logoImg').src);
-    if (r.ok) {
-      var blob = await r.blob();
-      logoData = await new Promise(function(res) {
-        var fr = new FileReader();
-        fr.onload = function(e) { res(e.target.result); };
-        fr.readAsDataURL(blob);
+    var src = $id('logoImg').src;
+    if (src && src.startsWith('data:')) {
+      logoData = src;
+    } else {
+      var r = await fetch(src);
+      if (r.ok) {
+        var blob = await r.blob();
+        logoData = await new Promise(function(res) {
+          var fr = new FileReader();
+          fr.onload = function(e) { res(e.target.result); };
+          fr.readAsDataURL(blob);
+        });
+      }
+    }
+
+    if (logoData) {
+      await new Promise(function(resolve) {
+        var img = new Image();
+        img.onload = function() {
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          var aspect = w / h;
+          var maxW = 80;
+          var maxH = 33;
+          if (aspect > (maxW / maxH)) {
+            logoWidth = maxW;
+            logoHeight = maxW / aspect;
+          } else {
+            logoHeight = maxH;
+            logoWidth = maxH * aspect;
+          }
+          resolve();
+        };
+        img.onerror = function() {
+          resolve();
+        };
+        img.src = logoData;
       });
     }
   } catch(e) {}
@@ -540,16 +583,36 @@ async function gerarPDF(download) {
   var y = ML;
 
   /* Cabecalho */
-  if (logoData) doc.addImage(logoData, 'PNG', ML, y, 62, 28);
+  if (logoData) {
+    var format = 'PNG';
+    if (logoData.startsWith('data:image/')) {
+      var match = logoData.match(/^data:image\/([a-zA-Z+]+);base64/);
+      if (match && match[1]) {
+        var detectedFormat = match[1].toUpperCase();
+        if (detectedFormat === 'JPEG' || detectedFormat === 'JPG') {
+          format = 'JPEG';
+        } else if (detectedFormat === 'PNG') {
+          format = 'PNG';
+        } else if (detectedFormat === 'WEBP') {
+          format = 'WEBP';
+        }
+      }
+    }
+    doc.addImage(logoData, format, ML, y, logoWidth, logoHeight);
+  }
 
   doc.setFontSize(12).setFont(undefined, 'bold').setTextColor(14, 165, 233);
-  doc.text('HIDRO G BOMBAS SUBMERSAS LTDA.', MR, y + 5, { align: 'right' });
+  doc.text('HIDRO G BOMBAS SUBMERSAS LTDA.', MR, y + 4, { align: 'right' });
   doc.setFontSize(8.5).setFont(undefined, 'normal').setTextColor(80, 80, 80);
-  doc.text('CNPJ: 12.835.772/0001-22',                 MR, y + 12, { align: 'right' });
-  doc.text('Rua Feres Bucater 1461 - Jd. Sao Marco',   MR, y + 18, { align: 'right' });
-  doc.text('Sao Jose do Rio Preto - SP',                MR, y + 24, { align: 'right' });
-  doc.text('Tel: (17) 3216-5760  -  (17) 98132-4900',  MR, y + 30, { align: 'right' });
-  y += 36;
+  doc.text('CNPJ: 12.835.772/0001-22',                 MR, y + 9.5, { align: 'right' });
+  doc.text('Rua Feres Bucater 1461 - Jd. Sao Marco',   MR, y + 14.5, { align: 'right' });
+  doc.text('Sao Jose do Rio Preto - SP',                MR, y + 19.5, { align: 'right' });
+  doc.text('Tel: (17) 3216-5760  -  (17) 98132-4900',  MR, y + 24.5, { align: 'right' });
+  
+  // Calcula a posição da linha separadora dinamicamente com base nas alturas da logo e texto
+  var textBottom = y + 24.5;
+  var logoBottom = logoData ? (y + logoHeight) : y;
+  y = Math.max(textBottom, logoBottom) + 4;
 
   doc.setDrawColor(14, 165, 233).setLineWidth(0.6).line(ML, y, MR, y);
   y += 6;
@@ -591,7 +654,7 @@ async function gerarPDF(download) {
   }
 
   /* Secao Cliente */
-  y = secHeader('INFORMACOES DO CLIENTE', y);
+  y = secHeader('INFORMAÇÕES DO CLIENTE', y);
   var c = b.client || {};
   var phones = [c.phone1, c.phone2, c.phone3].filter(Boolean).join(' / ') || '-';
   var street = [c.address, c.neighborhood].filter(Boolean).join(', ') || '-';
@@ -618,7 +681,7 @@ async function gerarPDF(download) {
   });
 
   /* Secao Itens */
-  y = secHeader('ITENS DO ORCAMENTO', y);
+  y = secHeader('ITENS DO ORÇAMENTO', y);
   var items = b.items.filter(function(it) { return it.descricao || it.qtd > 0; });
 
   var reservedBelow = 55;
@@ -685,7 +748,7 @@ async function gerarPDF(download) {
   if (x.pagamento) conds.push([lbl('Pagamento:'),       x.pagamento]);
 
   if (conds.length > 0 || x.obs) {
-    y = secHeader('INFORMACOES COMPLEMENTARES', y);
+    y = secHeader('INFORMAÇÕES COMPLEMENTARES', y);
 
     if (conds.length > 0) {
       var condRows = [];
@@ -915,6 +978,23 @@ document.addEventListener('DOMContentLoaded', async function() {
   $id('savePdfButton').addEventListener('click', function() { gerarPDF(true); });
   $id('printButton').addEventListener('click',   function() { gerarPDF(false); });
 
+  /* Upload de Logo Customizada */
+  var logoUploadInput = $id('logoUploadInput');
+  if (logoUploadInput) {
+    logoUploadInput.addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        alterarLogo(e.target.files[0]);
+      }
+    });
+  }
+
+  // Se já tem uma logo customizada, mostra o botão restaurar
+  var customLogo = localStorage.getItem('customLogo');
+  if (customLogo) {
+    var btnReset = $id('btnResetLogo');
+    if (btnReset) btnReset.classList.remove('d-none');
+  }
+
   function confirmarNovo(e) {
     if (e) e.preventDefault();
     sysConfirm('Deseja descartar o que já está preenchido e iniciar um novo orçamento?', function() {
@@ -942,6 +1022,51 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }, 5000);
 });
+
+/* Funções globais para alteração de logo */
+function alterarLogo(file) {
+  if (!file) return;
+  
+  if (file.size > 1.5 * 1024 * 1024) {
+    sysAlert('A imagem é muito grande! Escolha uma imagem de até 1.5MB.');
+    return;
+  }
+  
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var dataUrl = e.target.result;
+    try {
+      localStorage.setItem('customLogo', dataUrl);
+      
+      var logoImg = document.getElementById('logoImg');
+      if (logoImg) {
+        logoImg.src = dataUrl;
+      }
+      
+      var btnReset = document.getElementById('btnResetLogo');
+      if (btnReset) btnReset.classList.remove('d-none');
+      
+      showToast('Logo do orçamento atualizada com sucesso!', 'success');
+    } catch(err) {
+      console.error(err);
+      sysAlert('Erro ao salvar a logo no navegador. Tente uma imagem menor.');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function restaurarLogoPadrao() {
+  sysConfirm('Deseja restaurar a logo original do orçamento?', function() {
+    localStorage.removeItem('customLogo');
+    var logoImg = document.getElementById('logoImg');
+    if (logoImg) {
+      logoImg.src = 'orcamento.png';
+    }
+    var btnReset = document.getElementById('btnResetLogo');
+    if (btnReset) btnReset.classList.add('d-none');
+    showToast('Logo original restaurada com sucesso!', 'success');
+  });
+}
 </script>
 </body>
 </html>

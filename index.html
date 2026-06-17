@@ -82,8 +82,8 @@
             <i class="fa-solid fa-plus"></i>
           </div>
           <div class="flex-grow-1">
-            <h6 class="mb-1 fw-bold">Novo Orcamento</h6>
-            <p class="text-muted mb-0" style="font-size:.85rem">Crie um orcamento rapidamente</p>
+            <h6 class="mb-1 fw-bold">Novo Orçamento</h6>
+            <p class="text-muted mb-0" style="font-size:.85rem">Crie um orçamento rapidamente</p>
           </div>
           <a class="btn btn-brand" href="cadastro.html" id="btnNovo">
             <i class="fa-solid fa-arrow-right"></i>
@@ -98,7 +98,7 @@
             <i class="fa-solid fa-list-check"></i>
           </div>
           <div class="flex-grow-1">
-            <h6 class="mb-1 fw-bold">Todos os Orcamentos</h6>
+            <h6 class="mb-1 fw-bold">Todos os Orçamentos</h6>
             <p class="text-muted mb-0" style="font-size:.85rem">Veja, edite e gerencie</p>
           </div>
           <a class="btn btn-outline-secondary" href="relatorio.html">
@@ -216,7 +216,7 @@ async function renderPage() {
   tbody.innerHTML = '';
 
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Nenhum orcamento vencendo nos proximos 10 dias.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Nenhum orçamento vencendo nos próximos 10 dias.</td></tr>';
     return;
   }
   list.forEach(function(qo) {
