@@ -496,3 +496,277 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+/* ============================================================
+   PDF - jsPDF + autoTable (Compatível com qualquer página)
+   ============================================================ */
+async function gerarPDF(b, download) {
+  if (download === undefined) download = true;
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF('p', 'mm', 'a4');
+
+  var PW = 210, PH = 297, ML = 12, MR = 198, CW = MR - ML;
+  var BRAND = [14, 165, 233];
+
+  /* Carrega logo local */
+  var logoData = null;
+  var logoWidth = 62;
+  var logoHeight = 28;
+  try {
+    var src = localStorage.getItem('customLogo') || 'orcamento.png';
+    if (src && src.startsWith('data:')) {
+      logoData = src;
+    } else {
+      var r = await fetch(src);
+      if (r.ok) {
+        var blob = await r.blob();
+        logoData = await new Promise(function(res) {
+          var fr = new FileReader();
+          fr.onload = function(e) { res(e.target.result); };
+          fr.readAsDataURL(blob);
+        });
+      }
+    }
+
+    if (logoData) {
+      await new Promise(function(resolve) {
+        var img = new Image();
+        img.onload = function() {
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          var aspect = w / h;
+          var maxW = 80;
+          var maxH = 33;
+          if (aspect > (maxW / maxH)) {
+            logoWidth = maxW;
+            logoHeight = maxW / aspect;
+          } else {
+            logoHeight = maxH;
+            logoWidth = maxH * aspect;
+          }
+          resolve();
+        };
+        img.onerror = function() {
+          resolve();
+        };
+        img.src = logoData;
+      });
+    }
+  } catch(e) {}
+
+  var y = ML;
+
+  /* Cabecalho */
+  if (logoData) {
+    var format = 'PNG';
+    if (logoData.startsWith('data:image/')) {
+      var match = logoData.match(/^data:image\/([a-zA-Z+]+);base64/);
+      if (match && match[1]) {
+        var detectedFormat = match[1].toUpperCase();
+        if (detectedFormat === 'JPEG' || detectedFormat === 'JPG') {
+          format = 'JPEG';
+        } else if (detectedFormat === 'PNG') {
+          format = 'PNG';
+        } else if (detectedFormat === 'WEBP') {
+          format = 'WEBP';
+        }
+      }
+    }
+    doc.addImage(logoData, format, ML, y, logoWidth, logoHeight);
+  }
+
+  doc.setFontSize(12).setFont(undefined, 'bold').setTextColor(14, 165, 233);
+  doc.text('HIDRO G BOMBAS SUBMERSAS LTDA.', MR, y + 4, { align: 'right' });
+  doc.setFontSize(8.5).setFont(undefined, 'normal').setTextColor(80, 80, 80);
+  doc.text('CNPJ: 12.835.772/0001-22',                 MR, y + 9.5, { align: 'right' });
+  doc.text('Rua Feres Bucater 1461 - Jd. Sao Marco',   MR, y + 14.5, { align: 'right' });
+  doc.text('Sao Jose do Rio Preto - SP',                MR, y + 19.5, { align: 'right' });
+  doc.text('Tel: (17) 3216-5760  -  (17) 98132-4900',  MR, y + 24.5, { align: 'right' });
+  
+  // Calcula a posição da linha separadora dinamicamente com base nas alturas da logo e texto
+  var textBottom = y + 24.5;
+  var logoBottom = logoData ? (y + logoHeight) : y;
+  y = Math.max(textBottom, logoBottom) + 4;
+
+  doc.setDrawColor(14, 165, 233).setLineWidth(0.6).line(ML, y, MR, y);
+  y += 6;
+
+  var title = b.tipo || 'Orçamento';
+  if (title.toLowerCase() === 'orcamento') title = 'Orçamento';
+
+  doc.setFontSize(13).setFont(undefined, 'bold').setTextColor(14, 165, 233);
+  doc.text(title + ' - ' + b.id, PW / 2, y, { align: 'center' });
+  doc.setFontSize(9).setFont(undefined, 'normal').setTextColor(60, 60, 60);
+  doc.text('Data: ' + (b.data || ''), MR, y, { align: 'right' });
+  y += 4;
+  doc.setDrawColor(210, 210, 210).setLineWidth(0.2).line(ML, y, MR, y);
+  y += 6;
+
+  /* Helper secao */
+  function secHeader(txt, yy) {
+    doc.setFillColor(240, 249, 255); doc.rect(ML, yy, CW, 7, 'F');
+    doc.setFillColor(14, 165, 233); doc.rect(ML, yy, 3, 7, 'F');
+    doc.setFontSize(8.5).setFont(undefined, 'bold').setTextColor(3, 105, 161);
+    doc.text(txt, ML + 5, yy + 5);
+    return yy + 9;
+  }
+
+  /* Helper celula label */
+  function lbl(txt) {
+    return { content: txt, styles: { fontStyle: 'bold', textColor: [3, 105, 161] } };
+  }
+
+  /* Helper tabela sem bordas */
+  function plainTable(startY, body, colStyles) {
+    doc.autoTable({
+      startY: startY, margin: { left: ML, right: ML }, body: body,
+      styles: { fontSize: 8.5, cellPadding: 2, overflow: 'ellipsis', textColor: [40, 40, 40] },
+      columnStyles: colStyles,
+      theme: 'plain', pageBreak: 'avoid'
+    });
+    return doc.lastAutoTable.finalY + 2;
+  }
+
+  /* Secao Cliente */
+  y = secHeader('INFORMAÇÕES DO CLIENTE', y);
+  var c = b.client || {};
+  var phones = [c.phone1, c.phone2, c.phone3].filter(Boolean).join(' / ') || '-';
+  var street = [c.address, c.neighborhood].filter(Boolean).join(', ') || '-';
+  var cityUF = [c.city, c.state].filter(Boolean).join(' - ') || '';
+
+  /* Linha 1+2: Nome/CPF e Telefone/IE — 4 colunas fixas */
+  y = plainTable(y, [
+    [lbl('Nome:'),     b.clientName || '-',  lbl('CPF/CNPJ:'), c.doc || '-'],
+    [lbl('Telefone:'), phones,               lbl('IE:'),        c.ie  || '-']
+  ], {
+    0: { cellWidth: 26 }, 1: { cellWidth: 68 },
+    2: { cellWidth: 26 }, 3: { cellWidth: 'auto' }
+  });
+
+  /* Linha 3: Endereco ocupa coluna larga com linebreak; CEP em coluna separada
+     Col 0: label 26mm | Col 1: rua+bairro (auto, linebreak) | Col 2: label 16mm | Col 3: valor 38mm */
+  y = plainTable(y, [
+    [lbl('Endereco:'), street + (cityUF ? '\n' + cityUF : ''), lbl('CEP:'), c.cep || '-']
+  ], {
+    0: { cellWidth: 26 },
+    1: { cellWidth: 'auto', overflow: 'linebreak' },
+    2: { cellWidth: 16 },
+    3: { cellWidth: 38 }
+  });
+
+  /* Secao Itens */
+  y = secHeader('ITENS DO ORÇAMENTO', y);
+  var items = b.items.filter(function(it) { return it.descricao || it.qtd > 0; });
+
+  var reservedBelow = 55;
+  var availH = PH - y - reservedBelow - ML;
+  var N = Math.max(items.length, 1);
+  var cellPad = 2;
+  var fs = Math.max(6, Math.min(9, Math.floor((availH / (N + 1) - 2 * cellPad) / 0.3528)));
+
+  doc.autoTable({
+    startY: y, margin: { left: ML, right: ML },
+    head: [[
+      { content: '#', styles: { halign: 'center' } },
+      'Descricao',
+      { content: 'Qtd', styles: { halign: 'center' } },
+      { content: 'Valor Unit.', styles: { halign: 'right' } },
+      { content: 'Total', styles: { halign: 'right' } }
+    ]],
+    body: items.map(function(it, i) {
+      return [
+        { content: String(i + 1), styles: { halign: 'center' } },
+        it.descricao || '-',
+        { content: String(it.qtd || 0), styles: { halign: 'center' } },
+        { content: currencyBR(it.unitario || 0), styles: { halign: 'right' } },
+        { content: currencyBR(it.total || 0), styles: { halign: 'right' } }
+      ];
+    }),
+    styles: { fontSize: fs, cellPadding: cellPad, textColor: [40, 40, 40] },
+    columnStyles: {
+      0: { cellWidth: 8 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 12 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 28 }
+    },
+    headStyles: { fillColor: BRAND, textColor: [255, 255, 255], fontStyle: 'bold' },
+    theme: 'striped', pageBreak: 'avoid'
+  });
+  y = doc.lastAutoTable.finalY + 4;
+
+  /* Resumo de valores */
+  var vl = b.valores || {};
+  var summaryRows = [
+    [lbl('Sub Total:'), currencyBR(vl.subtotal || 0)]
+  ];
+  if (vl.frete > 0)    summaryRows.push([lbl('Frete (+):'),    currencyBR(vl.frete)]);
+  if (vl.desconto > 0) summaryRows.push([lbl('Desconto (-):'), currencyBR(vl.desconto)]);
+
+  y = plainTable(y, summaryRows, { 0: { cellWidth: 'auto', halign: 'right' }, 1: { cellWidth: 35, halign: 'right' } });
+
+  /* Total destacado */
+  var TX_LBL = MR - 75;
+  doc.setFillColor(14, 165, 233);
+  doc.rect(TX_LBL, y, MR - TX_LBL, 10, 'F');
+  doc.setFontSize(10).setFont(undefined, 'bold').setTextColor(255, 255, 255);
+  doc.text('TOTAL:', TX_LBL + 2.5, y + 7);
+  doc.text(currencyBR(vl.total || 0), MR - 2.5, y + 7, { align: 'right' });
+  y += 14;
+
+  /* Condicoes - 4 colunas via autoTable
+     Coluna label: 44mm (comporta "Prazo de Entrega:" sem sobreposicao) */
+  var x = b.extras || {};
+  var conds = [];
+  if (x.garantia)  conds.push([lbl('Garantia:'),        x.garantia ]);
+  if (x.prazo)     conds.push([lbl('Prazo de Entrega:'),x.prazo    ]);
+  if (x.validade)  conds.push([lbl('Validade:'),        x.validade ]);
+  if (x.pagamento) conds.push([lbl('Pagamento:'),       x.pagamento]);
+
+  if (conds.length > 0 || x.obs) {
+    y = secHeader('INFORMAÇÕES COMPLEMENTARES', y);
+
+    if (conds.length > 0) {
+      var condRows = [];
+      for (var i = 0; i < conds.length; i += 2) {
+        condRows.push([
+          conds[i][0],   conds[i][1] || '-',
+          conds[i+1] ? conds[i+1][0] : { content: '' },
+          conds[i+1] ? conds[i+1][1] || '-' : ''
+        ]);
+      }
+      y = plainTable(y, condRows, {
+        0: { cellWidth: 44 }, 1: { cellWidth: 49 },
+        2: { cellWidth: 44 }, 3: { cellWidth: 'auto' }
+      });
+    }
+
+    if (x.obs) {
+      y = plainTable(y,
+        [[lbl('Observacoes:'), x.obs]],
+        { 0: { cellWidth: 40 }, 1: { cellWidth: 'auto', overflow: 'linebreak' } }
+      );
+    }
+  }
+
+  /* Rodape */
+  doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
+  doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
+  doc.text(
+    'HIDRO G BOMBAS SUBMERSAS LTDA.   -   CNPJ: 12.835.772/0001-22   -   Tel: (17) 3216-5760',
+    PW / 2, PH - 9, { align: 'center' }
+  );
+
+  /* Salva */
+  var fn = [
+    (b.id || 'orcamento').replace(/[^\w\-]+/g, '_'),
+    (b.data || '').replace(/[^\d]/g, ''),
+    (b.clientName || 'cliente').replace(/[^\w\-]+/g, '_').slice(0, 20)
+  ].filter(Boolean).join('_') + '.pdf';
+
+  if (download) {
+    doc.save(fn);
+  } else {
+    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+  }
+}
+
