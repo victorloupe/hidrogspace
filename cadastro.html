@@ -15,6 +15,28 @@
     .row-remove-btn:hover { opacity:1; }
     .form-control:focus { border-color:var(--brand); box-shadow:0 0 0 .15rem rgba(14,165,233,.2); }
     #numeroOrcamento, #dataHoje { border:none !important; box-shadow:none !important; background:transparent; font-size:1rem; }
+
+    /* ── Autocomplete de Produtos ────────────────────── */
+    #prodDropdown {
+      position: fixed; z-index: 9100;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.13);
+      max-height: 220px; overflow-y: auto;
+      display: none; min-width: 240px;
+    }
+    .prod-item {
+      padding: 8px 12px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .85rem; gap: 8px; border-bottom: 1px solid #f1f5f9;
+    }
+    .prod-item:last-child { border-bottom: none; }
+    .prod-item:hover, .prod-item.pi-active { background: #f0f9ff; }
+    .prod-item .pi-name { flex:1; color:#0f172a; }
+    .prod-item .pi-price { color:#0ea5e9; font-weight:600; white-space:nowrap; font-size:.8rem; }
+    .prod-item.pi-add { color:#0ea5e9; font-style:italic; gap:6px; }
+    .prod-item.pi-add:hover { background:#f0f9ff; }
   </style>
 </head>
 <body>
@@ -29,6 +51,7 @@
         <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
         <a class="btn btn-outline-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
         <a class="btn btn-brand btn-sm text-white" href="#" id="navNovoBtn"><i class="fa-solid fa-plus"></i> Novo</a>
+        <a class="btn btn-outline-secondary btn-sm no-print" href="produtos.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
         <button class="btn btn-sm btn-outline-danger no-print" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
       </nav>
     </div>
@@ -157,6 +180,30 @@
 
 </div><!-- .wrap -->
 
+<!-- Dropdown flutuante de produtos -->
+<div id="prodDropdown"></div>
+
+<!-- Modal: Adicionar produto ao catálogo -->
+<div id="modalAddProduct" style="display:none; position:fixed; inset:0; z-index:9200; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,.15); padding:24px; width:100%; max-width:380px;">
+    <h6 style="font-weight:700; margin-bottom:16px; color:#0f172a;">
+      <i class="fa-solid fa-box-open" style="color:#0ea5e9; margin-right:6px;"></i>Novo Produto
+    </h6>
+    <div class="mb-3">
+      <label style="font-size:.82rem; color:#475569; display:block; margin-bottom:4px;">Nome do produto</label>
+      <input id="prodModalName" class="form-control" placeholder="Ex.: Bomba Submersa 1HP">
+    </div>
+    <div class="mb-4">
+      <label style="font-size:.82rem; color:#475569; display:block; margin-bottom:4px;">Preço unitário</label>
+      <input id="prodModalPrice" class="form-control" placeholder="R$ 0,00" inputmode="numeric">
+    </div>
+    <div style="display:flex; gap:12px;">
+      <button class="btn btn-outline-secondary flex-fill" id="prodModalCancel">Cancelar</button>
+      <button class="btn btn-brand text-white flex-fill" id="prodModalSave"><i class="fa-solid fa-floppy-disk"></i> Salvar produto</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
   <div class="toast" id="toast" role="alert">
     <div class="toast-header">
@@ -210,13 +257,18 @@ function criarLinha(num) {
   tr.querySelector('.row-unit').addEventListener('input', function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
   tr.querySelector('.row-unit').addEventListener('blur',  function(e) { e.target.value = moneyMask(e.target.value); recalc(); });
   
-  // Adiciona nova linha automaticamente se esta for a última e o usuário digitar nela
-  tr.querySelector('.row-desc').addEventListener('input', function(e) {
+  // Adiciona nova linha automaticamente + autocomplete de produtos
+  var descEl = tr.querySelector('.row-desc');
+  descEl.addEventListener('input', function(e) {
     var tbody = $id('itemsTbody');
     if (tr === tbody.rows[tbody.rows.length - 1] && e.target.value.trim() !== '') {
       addRow();
     }
+    showProdDropdown(descEl, tr);
   });
+  // sem listener de focus — dropdown só aparece ao digitar
+  descEl.addEventListener('blur',  function() { setTimeout(hideProdDropdown, 180); });
+  descEl.addEventListener('keydown', function(e) { handleProdKey(e, tr); });
 
   enableSwipeToDelete(tr);
   return tr;
@@ -536,6 +588,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   try {
     allBudgets = await BudgetDB.getAll();
   } catch(e) { console.error(e); }
+
+  // Carrega catálogo de produtos para autocomplete
+  try {
+    _products = await ProductDB.getAll();
+  } catch(e) { console.error('[Produtos]', e); }
   
   var clientsMap = {};
   allBudgets.forEach(function(b) {
@@ -748,6 +805,145 @@ document.addEventListener('DOMContentLoaded', async function() {
       } catch(e) {}
     }
   }, 5000);
+});
+
+/* ============================================================
+   CATÁLOGO DE PRODUTOS — autocomplete + adição rápida
+   ============================================================ */
+var _products = [];
+var _prodActiveIdx = -1;
+var _pendingProdTr = null;
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showProdDropdown(input, tr) {
+  var q = input.value.trim().toLowerCase();
+
+  // Exige mínimo 3 caracteres para mostrar o dropdown
+  if (q.length < 3) { hideProdDropdown(); return; }
+
+  var matched = _products.filter(function(p) { return p.name.toLowerCase().indexOf(q) >= 0; });
+
+  var dd = $id('prodDropdown');
+  dd.innerHTML = '';
+  _prodActiveIdx = -1;
+
+  matched.forEach(function(p) {
+    var div = document.createElement('div');
+    div.className = 'prod-item';
+    div.innerHTML = '<span class="pi-name">' + escHtml(p.name) + '</span><span class="pi-price">' + currencyBR(p.price) + '</span>';
+    div.addEventListener('mousedown', function(e) { e.preventDefault(); selectProd(p, tr); });
+    dd.appendChild(div);
+  });
+
+  // Opção de adicionar se digitou algo sem correspondência exata
+  var exact = _products.some(function(p) { return p.name.toLowerCase() === q; });
+  if (q && !exact) {
+    var addDiv = document.createElement('div');
+    addDiv.className = 'prod-item pi-add';
+    addDiv.innerHTML = '<i class="fa-solid fa-plus" style="flex-shrink:0"></i><span>Adicionar <strong>' + escHtml(input.value.trim()) + '</strong> como produto</span>';
+    addDiv.addEventListener('mousedown', function(e) { e.preventDefault(); openProdModal(input.value.trim(), tr); });
+    dd.appendChild(addDiv);
+  }
+
+  if (!dd.children.length) { hideProdDropdown(); return; }
+
+  var rect = input.getBoundingClientRect();
+  dd.style.left  = rect.left + 'px';
+  dd.style.top   = (rect.bottom + 2) + 'px';
+  dd.style.width = Math.max(rect.width, 260) + 'px';
+  dd.style.display = 'block';
+}
+
+function hideProdDropdown() {
+  var dd = $id('prodDropdown');
+  if (dd) dd.style.display = 'none';
+  _prodActiveIdx = -1;
+}
+
+function selectProd(p, tr) {
+  tr.querySelector('.row-desc').value = p.name;
+  tr.querySelector('.row-unit').value = moneyMask(String(Math.round(p.price * 100)));
+  recalc();
+  hideProdDropdown();
+}
+
+function handleProdKey(e, tr) {
+  var dd = $id('prodDropdown');
+  if (!dd || dd.style.display === 'none') return;
+  var items = dd.querySelectorAll('.prod-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _prodActiveIdx = Math.min(_prodActiveIdx + 1, items.length - 1);
+    items.forEach(function(el, i) { el.classList.toggle('pi-active', i === _prodActiveIdx); });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _prodActiveIdx = Math.max(_prodActiveIdx - 1, 0);
+    items.forEach(function(el, i) { el.classList.toggle('pi-active', i === _prodActiveIdx); });
+  } else if (e.key === 'Enter' && _prodActiveIdx >= 0) {
+    e.preventDefault();
+    items[_prodActiveIdx].dispatchEvent(new MouseEvent('mousedown'));
+  } else if (e.key === 'Escape') {
+    hideProdDropdown();
+  }
+}
+
+function openProdModal(name, tr) {
+  _pendingProdTr = tr;
+  $id('prodModalName').value  = name || '';
+  $id('prodModalPrice').value = 'R$ 0,00';
+  $id('modalAddProduct').style.display = 'flex';
+  setTimeout(function() { $id('prodModalPrice').focus(); $id('prodModalPrice').select(); }, 50);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Máscara de dinheiro no preço do modal
+  $id('prodModalPrice').addEventListener('input', function() {
+    this.value = moneyMask(this.value);
+  });
+  $id('prodModalPrice').addEventListener('blur', function() {
+    this.value = moneyMask(this.value);
+  });
+
+  $id('prodModalCancel').addEventListener('click', function() {
+    $id('modalAddProduct').style.display = 'none';
+    _pendingProdTr = null;
+  });
+
+  $id('prodModalSave').addEventListener('click', async function() {
+    var name  = $id('prodModalName').value.trim();
+    var price = moneyUnmask($id('prodModalPrice').value);
+    if (!name) { showToast('Informe o nome do produto.', 'info'); return; }
+
+    var btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+
+    try {
+      var newProd = { id: crypto.randomUUID(), name: name, price: price };
+      await ProductDB.save(newProd);
+      _products.push(newProd);
+      _products.sort(function(a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
+
+      if (_pendingProdTr) selectProd(newProd, _pendingProdTr);
+      $id('modalAddProduct').style.display = 'none';
+      _pendingProdTr = null;
+      showToast('Produto "' + name + '" salvo!', 'success');
+    } catch(err) {
+      showToast('Erro ao salvar produto.', 'info');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar produto';
+    }
+  });
+
+  // Fechar modal ao clicar fora
+  $id('modalAddProduct').addEventListener('click', function(e) {
+    if (e.target === this) { this.style.display = 'none'; _pendingProdTr = null; }
+  });
 });
 
 /* Funções globais para alteração de logo */

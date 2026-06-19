@@ -97,6 +97,35 @@ var BudgetDB = {
   }
 };
 
+var ProductDB = {
+
+  getAll: async function() {
+    try {
+      var res = await getSupa().from('products').select('*').order('name');
+      if (res.error) throw res.error;
+      return res.data || [];
+    } catch(e) { console.error('[ProductDB] getAll:', e.message); return []; }
+  },
+
+  save: async function(p) {
+    try {
+      var res = await getSupa().from('products').upsert(
+        { id: p.id, name: p.name, price: p.price },
+        { onConflict: 'id' }
+      );
+      if (res.error) throw res.error;
+    } catch(e) { console.error('[ProductDB] save:', e.message); throw e; }
+  },
+
+  remove: async function(id) {
+    try {
+      var res = await getSupa().from('products').delete().eq('id', id);
+      if (res.error) throw res.error;
+    } catch(e) { console.error('[ProductDB] remove:', e.message); throw e; }
+  }
+
+};
+
 /* Data */
 function todayISO() {
   var n = new Date(); n.setHours(0,0,0,0);

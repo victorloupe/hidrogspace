@@ -29,3 +29,21 @@ $$ language plpgsql;
 create trigger budgets_updated_at
   before update on budgets
   for each row execute function set_updated_at();
+
+-- Tabela de produtos (catálogo para autocomplete nos orçamentos)
+create table if not exists products (
+  id    uuid primary key default gen_random_uuid(),
+  name  text not null,
+  price numeric default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table products enable row level security;
+
+create policy "acesso_total" on products
+  for all using (true) with check (true);
+
+create trigger products_updated_at
+  before update on products
+  for each row execute function set_updated_at();

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produtos - Hidro G</title>
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .price-col { color: var(--brand-600); font-weight: 700; }
+    .empty-state { padding: 56px 20px; text-align: center; color: var(--text-muted); }
+    .empty-state i { font-size: 2.5rem; margin-bottom: 12px; opacity: .35; display:block; }
+    /* Modal overlay — mesmo padrão do sysAlert/sysConfirm */
+    #prodModal {
+      display: none; position: fixed; inset: 0; z-index: 9200;
+      background: rgba(15,23,42,.4); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    #prodModalBox {
+      background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
+      padding: 24px; width: 100%; max-width: 400px;
+    }
+    tr.editing td { background: #f0f9ff !important; }
+    /* Paginação */
+    #paginationBar { border-top: 1px solid var(--border); padding: 12px 20px; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+    #paginationBar small { color: var(--text-muted); font-size:.82rem; }
+    .pagination { margin:0; gap:3px; }
+    .page-link { color: var(--brand-600); border-color: var(--border); border-radius: 6px !important; padding: 4px 10px; font-size:.82rem; line-height:1.4; }
+    .page-link:hover { color: var(--brand-700); background: var(--brand-50); border-color: var(--brand); }
+    .page-item.active .page-link { background: var(--brand); border-color: var(--brand); color:#fff; }
+    .page-item.disabled .page-link { color:#cbd5e1; border-color:var(--border); background:#fff; }
+  </style>
+</head>
+<body>
+
+<header class="site-header navbar navbar-expand-md navbar-light">
+  <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
+    <img src="logohidrog.png" alt="Hidro G" id="logoImg" style="height:50px;">
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="headerNav">
+      <nav class="d-flex flex-column flex-md-row gap-2 ms-auto">
+        <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
+        <a class="btn btn-outline-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
+        <a class="btn btn-outline-secondary btn-sm" href="cadastro.html"><i class="fa-solid fa-plus"></i> Novo</a>
+        <a class="btn btn-brand btn-sm text-white" href="produtos.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
+        <button class="btn btn-sm btn-outline-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+
+      <!-- Cabeçalho -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-4 py-3 border-bottom">
+        <h6 class="mb-0 fw-bold d-flex align-items-center gap-2">
+          <i class="fa-solid fa-box-open" style="color:var(--brand)"></i>
+          Catálogo de Produtos
+          <span class="chip" id="prodCount" style="font-size:.75rem; padding:.2rem .6rem;">0 produtos</span>
+        </h6>
+        <div class="d-flex gap-2 flex-wrap">
+          <div class="input-group input-group-sm" style="width:240px">
+            <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+            <input type="search" id="searchInput" class="form-control border-start-0" placeholder="Buscar produto...">
+          </div>
+          <button class="btn btn-sm btn-brand text-white" id="btnNovoProd">
+            <i class="fa-solid fa-plus"></i> Novo produto
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabela -->
+      <div>
+        <table class="table mb-0" style="table-layout:fixed; width:100%">
+          <thead>
+            <tr>
+              <th>Nome do produto</th>
+              <th style="width:160px">Preço unit.</th>
+              <th style="width:110px"></th>
+            </tr>
+          </thead>
+          <tbody id="prodTbody">
+            <tr>
+              <td colspan="3" class="text-center py-5">
+                <div class="water-loader">
+                  <div class="drop"></div>
+                  <div class="wave"></div>
+                  <div class="loader-text">Carregando produtos...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      <div id="paginationBar" style="display:none;"></div>
+
+    </div>
+  </div>
+</div><!-- .wrap -->
+
+<!-- Modal Adicionar / Editar produto -->
+<div id="prodModal">
+  <div id="prodModalBox">
+    <h6 id="modalTitle" style="font-weight:700; margin-bottom:20px; color:#0f172a;">
+      <i class="fa-solid fa-box-open" style="color:var(--brand); margin-right:6px;"></i>Novo Produto
+    </h6>
+    <input type="hidden" id="modalProdId">
+    <div class="mb-3">
+      <label class="form-label" style="font-size:.82rem; color:#475569; display:block; margin-bottom:4px;">Nome do produto</label>
+      <input id="modalProdName" class="form-control" placeholder="Ex.: Bomba Submersa 1HP HidroG" autocomplete="off">
+    </div>
+    <div class="mb-4">
+      <label class="form-label" style="font-size:.82rem; color:#475569; display:block; margin-bottom:4px;">Preço unitário</label>
+      <input id="modalProdPrice" class="form-control" placeholder="R$ 0,00" inputmode="numeric">
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary flex-fill py-2" id="modalCancelBtn" style="border-radius:8px;">Cancelar</button>
+      <button class="btn btn-brand text-white flex-fill py-2" id="modalSaveBtn" style="border-radius:8px;">
+        <i class="fa-solid fa-floppy-disk"></i> Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="utils.js"></script>
+<script>
+var _all      = [];   // todos os produtos
+var _filtered = [];   // após busca
+var _page     = 1;
+var PAGE_SIZE = 15;
+
+/* ── Renderiza a tabela (página atual) ──────────────── */
+function renderTable(pageList) {
+  var tbody = document.getElementById('prodTbody');
+  tbody.innerHTML = '';
+
+  if (!pageList.length) {
+    tbody.innerHTML =
+      '<tr><td colspan="3"><div class="empty-state">' +
+        '<i class="fa-solid fa-box-open"></i>' +
+        '<p class="mb-0">Nenhum produto encontrado.<br>' +
+        '<small>Clique em <strong>Novo produto</strong> para começar.</small></p>' +
+      '</div></td></tr>';
+    return;
+  }
+
+  pageList.forEach(function(p) {
+    var tr = document.createElement('tr');
+    tr.dataset.id = p.id;
+    tr.innerHTML =
+      '<td class="fw-medium">' + escHtml(p.name) + '</td>' +
+      '<td class="price-col">' + currencyBR(p.price) + '</td>' +
+      '<td class="text-nowrap">' +
+        '<button class="btn btn-sm btn-outline-secondary btn-table-action me-1 btn-edit" data-id="' + p.id + '" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>' +
+        '<button class="btn btn-sm btn-outline-danger btn-table-action btn-del" data-id="' + p.id + '" title="Excluir"><i class="fa-solid fa-trash"></i></button>' +
+      '</td>';
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.btn-edit').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var p = _all.find(function(x) { return x.id === btn.dataset.id; });
+      if (p) openModal(p);
+    });
+  });
+
+  tbody.querySelectorAll('.btn-del').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var p = _all.find(function(x) { return x.id === btn.dataset.id; });
+      if (!p) return;
+      sysConfirm('Excluir o produto <strong>' + escHtml(p.name) + '</strong>?', async function() {
+        try {
+          await ProductDB.remove(p.id);
+          _all = _all.filter(function(x) { return x.id !== p.id; });
+          // Se a página atual ficou vazia após exclusão, volta uma página
+          var totalPagesAfter = Math.ceil((_filtered.length - 1) / PAGE_SIZE);
+          if (_page > totalPagesAfter && _page > 1) _page--;
+          applySearch();
+          showToast('Produto excluído.', 'success');
+        } catch(e) {
+          showToast('Erro ao excluir produto.', 'info');
+        }
+      });
+    });
+  });
+}
+
+/* ── Paginação ──────────────────────────────────────── */
+function renderPagination(total) {
+  var bar = document.getElementById('paginationBar');
+  var totalPages = Math.ceil(total / PAGE_SIZE);
+
+  if (totalPages <= 1) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+
+  var start = (_page - 1) * PAGE_SIZE + 1;
+  var end   = Math.min(_page * PAGE_SIZE, total);
+
+  // Páginas a exibir (janela ao redor da atual + primeira e última)
+  function pageNums() {
+    var pages = [], last = -1;
+    for (var i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= _page - 2 && i <= _page + 2)) {
+        if (last !== -1 && i - last > 1) pages.push('...');
+        pages.push(i);
+        last = i;
+      }
+    }
+    return pages;
+  }
+
+  var nums = pageNums();
+  var li = '';
+
+  // Anterior
+  li += '<li class="page-item' + (_page === 1 ? ' disabled' : '') + '">' +
+        '<button class="page-link" data-pg="' + (_page - 1) + '">' +
+        '<i class="fa-solid fa-chevron-left"></i></button></li>';
+
+  nums.forEach(function(n) {
+    if (n === '...') {
+      li += '<li class="page-item disabled"><span class="page-link">…</span></li>';
+    } else {
+      li += '<li class="page-item' + (n === _page ? ' active' : '') + '">' +
+            '<button class="page-link" data-pg="' + n + '">' + n + '</button></li>';
+    }
+  });
+
+  // Próximo
+  li += '<li class="page-item' + (_page === totalPages ? ' disabled' : '') + '">' +
+        '<button class="page-link" data-pg="' + (_page + 1) + '">' +
+        '<i class="fa-solid fa-chevron-right"></i></button></li>';
+
+  bar.innerHTML =
+    '<small>' + start + '–' + end + ' de ' + total + ' produtos</small>' +
+    '<nav><ul class="pagination">' + li + '</ul></nav>';
+
+  bar.querySelectorAll('[data-pg]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var pg = parseInt(this.dataset.pg);
+      if (isNaN(pg) || pg < 1 || pg > totalPages) return;
+      _page = pg;
+      renderCurrentPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+
+/* ── Renderiza a página atual de _filtered ──────────── */
+function renderCurrentPage() {
+  var start = (_page - 1) * PAGE_SIZE;
+  renderTable(_filtered.slice(start, start + PAGE_SIZE));
+  renderPagination(_filtered.length);
+}
+
+function applySearch() {
+  var q = document.getElementById('searchInput').value.trim().toLowerCase();
+  _filtered = q
+    ? _all.filter(function(p) { return p.name.toLowerCase().indexOf(q) >= 0; })
+    : _all.slice();
+  _page = 1;
+  renderCurrentPage();
+  document.getElementById('prodCount').textContent =
+    _all.length + (_all.length === 1 ? ' produto' : ' produtos');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Modal ──────────────────────────────────────────── */
+function openModal(prod) {
+  var isEdit = prod && prod.id;
+  document.getElementById('modalTitle').innerHTML =
+    '<i class="fa-solid fa-' + (isEdit ? 'pen-to-square' : 'box-open') + '" style="color:var(--brand); margin-right:6px;"></i>' +
+    (isEdit ? 'Editar Produto' : 'Novo Produto');
+  document.getElementById('modalProdId').value    = isEdit ? prod.id    : '';
+  document.getElementById('modalProdName').value  = isEdit ? prod.name  : '';
+  document.getElementById('modalProdPrice').value = isEdit ? moneyMask(String(Math.round(prod.price * 100))) : 'R$ 0,00';
+  document.getElementById('prodModal').style.display = 'flex';
+  setTimeout(function() { document.getElementById('modalProdName').focus(); }, 50);
+
+  // Destaca a linha sendo editada
+  document.querySelectorAll('tr.editing').forEach(function(r) { r.classList.remove('editing'); });
+  if (isEdit) {
+    var row = document.querySelector('tr[data-id="' + prod.id + '"]');
+    if (row) row.classList.add('editing');
+  }
+}
+
+function closeModal() {
+  document.getElementById('prodModal').style.display = 'none';
+  document.querySelectorAll('tr.editing').forEach(function(r) { r.classList.remove('editing'); });
+}
+
+/* ── Salvar (criar ou editar) ───────────────────────── */
+document.getElementById('modalSaveBtn').addEventListener('click', async function() {
+  var id    = document.getElementById('modalProdId').value.trim();
+  var name  = document.getElementById('modalProdName').value.trim();
+  var price = moneyUnmask(document.getElementById('modalProdPrice').value);
+
+  if (!name) { showToast('Informe o nome do produto.', 'info'); document.getElementById('modalProdName').focus(); return; }
+
+  var btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
+
+  try {
+    var prod = { id: id || crypto.randomUUID(), name: name, price: price };
+    await ProductDB.save(prod);
+
+    if (id) {
+      var idx = _all.findIndex(function(x) { return x.id === id; });
+      if (idx >= 0) _all[idx] = prod; else _all.push(prod);
+    } else {
+      _all.push(prod);
+    }
+    _all.sort(function(a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
+
+    closeModal();
+    // Vai para a página onde o produto aparece
+    var q = document.getElementById('searchInput').value.trim().toLowerCase();
+    _filtered = q ? _all.filter(function(p) { return p.name.toLowerCase().indexOf(q) >= 0; }) : _all.slice();
+    var idx = _filtered.findIndex(function(x) { return x.id === prod.id; });
+    _page = idx >= 0 ? Math.floor(idx / PAGE_SIZE) + 1 : 1;
+    renderCurrentPage();
+    document.getElementById('prodCount').textContent = _all.length + (_all.length === 1 ? ' produto' : ' produtos');
+    showToast((id ? 'Produto atualizado!' : 'Produto salvo!'), 'success');
+  } catch(e) {
+    showToast('Erro ao salvar produto.', 'info');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar';
+  }
+});
+
+document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+
+// Fechar ao clicar fora
+document.getElementById('prodModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Enter salva
+document.getElementById('modalProdName').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('modalProdPrice').focus();
+});
+document.getElementById('modalProdPrice').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('modalSaveBtn').click();
+});
+
+/* ── Máscara de dinheiro ────────────────────────────── */
+document.getElementById('modalProdPrice').addEventListener('input', function() {
+  this.value = moneyMask(this.value);
+});
+document.getElementById('modalProdPrice').addEventListener('blur', function() {
+  this.value = moneyMask(this.value);
+});
+
+/* ── Busca ──────────────────────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', applySearch);
+
+/* ── Botão novo ─────────────────────────────────────── */
+document.getElementById('btnNovoProd').addEventListener('click', function() {
+  openModal(null);
+});
+
+/* ── Init ───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async function() {
+  var user = await checkAuth();
+  if (!user) return;
+
+  try {
+    _all = await ProductDB.getAll();
+  } catch(e) {
+    console.error('[Produtos]', e);
+    _all = [];
+  }
+  applySearch();
+});
+</script>
+</body>
+</html>
