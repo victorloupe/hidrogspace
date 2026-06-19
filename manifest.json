@@ -1,6 +1,7 @@
 {
   "name": "HidroG Space",
   "short_name": "HidroG",
+  "id": "hidrog-space-pwa-v3",
   "description": "Sistema de Controle de Orçamentos e Pedidos - Hidro G",
   "start_url": "./index.html",
   "display": "standalone",
@@ -9,12 +10,12 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icon-192.png?v=3",
+      "src": "icon-192.png?v=4",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "icon-512.png?v=3",
+      "src": "icon-512.png?v=4",
       "type": "image/png",
       "sizes": "512x512"
     }
