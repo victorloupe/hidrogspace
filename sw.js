@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hidrog-space-v1';
+const CACHE_NAME = 'hidrog-space-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -10,9 +10,9 @@ const ASSETS = [
   './utils.js?v=3',
   './favicon.ico',
   './logohidrog.png',
-  './icon-192.png',
-  './icon-512.png',
-  './manifest.json'
+  './icon-192.png?v=3',
+  './icon-512.png?v=3',
+  './manifest.json?v=3'
 ];
 
 // Instalação: cria o cache e guarda os recursos estáticos
