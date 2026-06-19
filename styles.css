@@ -18,6 +18,9 @@
 }
 
 /* Base */
+html {
+  background-color: #f1f5f9; /* matches var(--bg) to prevent white flash during page load */
+}
 body {
   background: var(--bg);
   color: var(--text);
@@ -36,7 +39,12 @@ body {
   padding: 0 clamp(12px, 3vw, 32px);
   gap: 16px;
 }
-.site-header img { height: 50px; flex-shrink: 0; }
+.site-header img {
+  height: 50px;
+  width: 112px;
+  aspect-ratio: 500 / 224;
+  flex-shrink: 0;
+}
 
 @media (max-width: 768px) {
   body {
@@ -702,5 +710,14 @@ body {
   border-color: var(--border);
   background: #fff;
 }
+
+/* Previne transição (flicker/fade-in) nos botões do menu ao carregar a página */
+.site-header nav .btn {
+  transition: none !important;
+}
+.site-header nav .btn:hover {
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out !important;
+}
+
 
 

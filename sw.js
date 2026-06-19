@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hidrog-space-v4';
+const CACHE_NAME = 'hidrog-space-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -6,13 +6,13 @@ const ASSETS = [
   './relatorio.html',
   './produtos.html',
   './login.html',
-  './styles.css?v=4',
-  './utils.js?v=4',
+  './styles.css?v=5',
+  './utils.js?v=5',
   './favicon.ico',
   './logohidrog.png',
-  './icon-192.png?v=4',
-  './icon-512.png?v=4',
-  './manifest.json?v=4'
+  './icon-192.png?v=5',
+  './icon-512.png?v=5',
+  './manifest.json?v=5'
 ];
 
 // Instalação: cria o cache e guarda os recursos estáticos
@@ -39,7 +39,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch: estratégia Network First com fallback para Cache
+// Fetch: estratégia Stale-While-Revalidate (carrega do cache instantaneamente e atualiza em background)
 self.addEventListener('fetch', (e) => {
   // Só intercepta e cacheia requisições HTTP e HTTPS (evita erro com extensões do Chrome)
   if (!e.request.url.startsWith('http://') && !e.request.url.startsWith('https://')) {
@@ -52,20 +52,25 @@ self.addEventListener('fetch', (e) => {
   }
   
   e.respondWith(
-    fetch(e.request)
-      .then((response) => {
-        // Se a resposta for válida, clona e atualiza o cache
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Se falhar a rede, busca no cache
-        return caches.match(e.request);
-      })
+    caches.match(e.request).then((cachedResponse) => {
+      const fetchPromise = fetch(e.request)
+        .then((networkResponse) => {
+          // Se a resposta for válida, clona e atualiza o cache
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch((err) => {
+          console.warn('[SW] Falha na rede para:', e.request.url, err);
+        });
+
+      // Retorna a resposta do cache instantaneamente se existir, senão aguarda a rede
+      return cachedResponse || fetchPromise;
+    })
   );
 });
+
