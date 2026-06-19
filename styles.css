@@ -20,6 +20,7 @@
 /* Base */
 html {
   background-color: #f1f5f9; /* matches var(--bg) to prevent white flash during page load */
+  scrollbar-gutter: stable;
 }
 body {
   background: var(--bg);
