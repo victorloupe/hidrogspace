@@ -14,6 +14,7 @@
   --header-h:   76px;
   --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
   --shadow-md:  0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.05);
+  --table-header: #f8fafc;
 }
 
 /* Base */
@@ -110,7 +111,7 @@ body {
 }
 
 /* Container do formulario */
-.container-wide { background: #fff; border-radius: var(--radius); padding: 20px; }
+.container-wide { background: var(--card); border-radius: var(--radius); padding: 20px; }
 
 /* Section header (cadastro) */
 .section-header {
@@ -145,6 +146,28 @@ body {
 .badge-status.ok,
 .status-ok            { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
 .badge-status.open    { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.badge-status.status-aprovado { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.badge-status.status-recusado { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.badge-status.status-pago     { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700; }
+
+/* ── BOTOES DE ACAO NA TABELA ───────────────────────────── */
+.btn-table-action {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  border-radius: 6px;
+  transition: all 0.15s ease-in-out;
+}
+.btn-table-action.btn-pay-modal:hover {
+  background-color: #16a34a !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25);
+}
 
 @keyframes badgePulse {
   0%,100% { box-shadow: none; }
@@ -165,7 +188,7 @@ body {
 /* ── Tabela ─────────────────────────────────────────────── */
 .table { font-size: .875rem; }
 .table thead th {
-  background: #f8fafc;
+  background: var(--table-header);
   color: var(--text-muted);
   font-weight: 600; font-size: .75rem;
   text-transform: uppercase; letter-spacing: .05em;
@@ -593,8 +616,17 @@ body {
   transition: background-color 0.2s ease !important;
 }
 
-.table tbody tr:hover td {
+.table tbody tr:not(.payment-row):hover td {
   background-color: var(--brand-50) !important; /* Azul bem clarinho (brand-50) */
+}
+
+/* Remove a linha divisória entre o pedido e seus pagamentos, integrando-os visualmente */
+.table tbody tr.parent-order-row td {
+  border-bottom: none !important;
+}
+.table tbody tr.payment-row td {
+  border-top: none !important;
+  padding-top: 0 !important;
 }
 
 /* Destaque para KPI chip ativo */
@@ -602,3 +634,73 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08), 0 0 0 2.5px currentColor !important;
 }
+
+/* ── BOTÕES SOFT (SEM CONTORNO, APENAS COR) ─────────────── */
+.btn-soft-primary {
+  background-color: var(--brand-50) !important;
+  color: var(--brand-700) !important;
+  border: 1px solid transparent !important;
+  font-weight: 600 !important;
+}
+.btn-soft-primary:hover {
+  background-color: var(--brand-100) !important;
+  color: var(--brand-800) !important;
+}
+
+.btn-soft-secondary {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid transparent !important;
+  font-weight: 600 !important;
+}
+.btn-soft-secondary:hover {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.btn-soft-danger {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid transparent !important;
+  font-weight: 600 !important;
+}
+.btn-soft-danger:hover {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+.btn-soft-success {
+  background-color: #f0fdf4 !important;
+  color: #16a34a !important;
+  border: 1px solid transparent !important;
+  font-weight: 600 !important;
+}
+.btn-soft-success:hover {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+}
+.page-link {
+  color: var(--brand-600);
+  border-color: var(--border);
+  border-radius: 6px !important;
+  padding: 4px 10px;
+  font-size: .82rem;
+  line-height: 1.4;
+}
+.page-link:hover {
+  color: var(--brand-700);
+  background: var(--brand-50);
+  border-color: var(--brand);
+}
+.page-item.active .page-link {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.page-item.disabled .page-link {
+  color: #cbd5e1;
+  border-color: var(--border);
+  background: #fff;
+}
+
+

@@ -1,6 +1,8 @@
 /* utils.js - Hidro G - Utilitarios + Supabase
    Usa function/var no topo para criar globais acessiveis em todos os scripts. */
 
+
+
 /* Supabase */
 var SUPA_URL = 'https://opnrrrhdvoapxnythdqn.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wbnJycmhkdm9hcHhueXRoZHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjYwMjYsImV4cCI6MjA5NTcwMjAyNn0.D49L13vueHRSobL1SFrLrCTyWkk6-kzbdST9PgbtsZw';
@@ -14,6 +16,9 @@ function getSupa() {
 }
 
 function budgetToRow(b) {
+  var extrasObj = Object.assign({}, b.extras, { status: b.status || (b.extras && b.extras.status) || 'Aberto' });
+  var valoresObj = Object.assign({}, b.valores, { parcelas: b.parcelas || (b.valores && b.valores.parcelas) || [] });
+
   return {
     id:           b.id,
     tipo:         b.tipo         || 'Orcamento',
@@ -23,15 +28,15 @@ function budgetToRow(b) {
     client_name:  b.clientName   || '',
     total_number: b.totalNumber  || 0,
     client:       b.client       || {},
-    valores:      b.valores      || {},
-    extras:       b.extras       || {},
+    valores:      valoresObj,
+    extras:       extrasObj,
     items:        b.items        || []
   };
 }
 
 function rowToBudget(row) {
   if (!row) return null;
-  return {
+  var b = {
     id:          row.id,
     tipo:        row.tipo,
     data:        row.data,
@@ -44,6 +49,10 @@ function rowToBudget(row) {
     extras:      row.extras   || {},
     items:       row.items    || []
   };
+
+  b.status = b.extras.status || 'Aberto';
+  b.parcelas = b.valores.parcelas || [];
+  return b;
 }
 
 var BudgetDB = {
@@ -243,10 +252,11 @@ function sysAlert(message, callback) {
   overlay.style.padding = '20px';
 
   var box = document.createElement('div');
-  box.style.background = '#ffffff';
+  box.className = 'sys-dialog-box';
+  box.style.background = 'var(--card)';
   box.style.borderRadius = '16px';
-  box.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-  box.style.border = '1px solid #e2e8f0';
+  box.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05)';
+  box.style.border = '1px solid var(--border)';
   box.style.padding = '24px';
   box.style.width = '100%';
   box.style.maxWidth = '380px';
@@ -256,8 +266,8 @@ function sysAlert(message, callback) {
     <div style="width: 48px; height: 48px; background: #f0f9ff; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.25rem;">
       <i class="fa-solid fa-circle-info"></i>
     </div>
-    <h6 style="font-weight: 700; margin-bottom: 8px; color: #0f172a;">Aviso</h6>
-    <p style="font-size: 0.88rem; color: #475569; margin-bottom: 20px; line-height: 1.5;">${message}</p>
+    <h6 style="font-weight: 700; margin-bottom: 8px; color: var(--text);">Aviso</h6>
+    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">${message}</p>
     <button class="btn btn-brand w-100 py-2" id="sysAlertOkBtn" style="border-radius: 8px;">OK</button>
   `;
 
@@ -288,10 +298,11 @@ function sysConfirm(message, onConfirm, onCancel) {
   overlay.style.padding = '20px';
 
   var box = document.createElement('div');
-  box.style.background = '#ffffff';
+  box.className = 'sys-dialog-box';
+  box.style.background = 'var(--card)';
   box.style.borderRadius = '16px';
-  box.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-  box.style.border = '1px solid #e2e8f0';
+  box.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05)';
+  box.style.border = '1px solid var(--border)';
   box.style.padding = '24px';
   box.style.width = '100%';
   box.style.maxWidth = '380px';
@@ -301,10 +312,10 @@ function sysConfirm(message, onConfirm, onCancel) {
     <div style="width: 48px; height: 48px; background: #fffbeb; color: #d97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.25rem;">
       <i class="fa-solid fa-triangle-exclamation"></i>
     </div>
-    <h6 style="font-weight: 700; margin-bottom: 8px; color: #0f172a;">Confirmação</h6>
-    <p style="font-size: 0.88rem; color: #475569; margin-bottom: 20px; line-height: 1.5;">${message}</p>
+    <h6 style="font-weight: 700; margin-bottom: 8px; color: var(--text);">Confirmação</h6>
+    <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">${message}</p>
     <div style="display: flex; gap: 12px;">
-      <button class="btn btn-outline-secondary flex-fill py-2" id="sysConfirmCancelBtn" style="border-radius: 8px;">Cancelar</button>
+      <button class="btn btn-soft-secondary flex-fill py-2" id="sysConfirmCancelBtn" style="border-radius: 8px;">Cancelar</button>
       <button class="btn btn-brand flex-fill py-2" id="sysConfirmOkBtn" style="border-radius: 8px;">Confirmar</button>
     </div>
   `;
@@ -619,8 +630,15 @@ async function gerarPDF(b, download) {
   doc.setDrawColor(14, 165, 233).setLineWidth(0.6).line(ML, y, MR, y);
   y += 6;
 
+  var status = b.status || (b.extras && b.extras.status) || 'Aberto';
   var title = b.tipo || 'Orçamento';
-  if (title.toLowerCase() === 'orcamento') title = 'Orçamento';
+  if (title.toLowerCase() === 'orcamento') {
+    if (status === 'Aprovado' || status === 'Pago') {
+      title = 'Pedido';
+    } else {
+      title = 'Orçamento';
+    }
+  }
 
   doc.setFontSize(13).setFont(undefined, 'bold').setTextColor(14, 165, 233);
   doc.text(title + ' - ' + b.id, PW / 2, y, { align: 'center' });
@@ -777,6 +795,45 @@ async function gerarPDF(b, download) {
     }
   }
 
+  /* Parcelas (se existirem e for pedido: status Aprovado ou Pago) */
+  var isPedido = (status === 'Aprovado' || status === 'Pago');
+  var parcelas = b.parcelas || [];
+  if (isPedido && parcelas.length > 0) {
+    if (y > PH - 60) {
+      doc.addPage();
+      y = ML + 10;
+    }
+    y = secHeader('CRONOGRAMA DE PAGAMENTO / PARCELAS', y);
+    doc.autoTable({
+      startY: y, margin: { left: ML, right: ML },
+      head: [[
+        { content: 'Nº Parcela', styles: { halign: 'center' } },
+        { content: 'Vencimento', styles: { halign: 'center' } },
+        { content: 'Valor', styles: { halign: 'right' } },
+        { content: 'Status', styles: { halign: 'center' } }
+      ]],
+      body: parcelas.map(function(p) {
+        var statusStr = p.paid ? 'PAGO' : 'PENDENTE';
+        return [
+          { content: p.number + 'ª Parcela', styles: { halign: 'center' } },
+          { content: fmtBR(p.due), styles: { halign: 'center' } },
+          { content: currencyBR(p.value), styles: { halign: 'right' } },
+          { content: statusStr, styles: { halign: 'center', fontStyle: 'bold', textColor: p.paid ? [16, 185, 129] : [239, 68, 68] } }
+        ];
+      }),
+      styles: { fontSize: 8, cellPadding: 2, textColor: [40, 40, 40] },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 'auto' }
+      },
+      headStyles: { fillColor: BRAND, textColor: [255, 255, 255], fontStyle: 'bold' },
+      theme: 'grid', pageBreak: 'avoid'
+    });
+    y = doc.lastAutoTable.finalY + 4;
+  }
+
   /* Rodape */
   doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
   doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
@@ -797,5 +854,580 @@ async function gerarPDF(b, download) {
   } else {
     window.open(URL.createObjectURL(doc.output('blob')), '_blank');
   }
+}
+
+/* Gerar Recibo PDF */
+async function gerarReciboPDF(b, download) {
+  if (download === undefined) download = true;
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF('p', 'mm', 'a4');
+
+  var PW = 210, PH = 297, ML = 12, MR = 198, CW = MR - ML;
+  var BRAND = [14, 165, 233];
+
+  /* Carrega logo local */
+  var logoData = null;
+  var logoWidth = 62;
+  var logoHeight = 28;
+  try {
+    var src = localStorage.getItem('customLogo') || 'orcamento.png';
+    if (src && src.startsWith('data:')) {
+      logoData = src;
+    } else {
+      var r = await fetch(src);
+      if (r.ok) {
+        var blob = await r.blob();
+        logoData = await new Promise(function(res) {
+          var fr = new FileReader();
+          fr.onload = function(e) { res(e.target.result); };
+          fr.readAsDataURL(blob);
+        });
+      }
+    }
+
+    if (logoData) {
+      await new Promise(function(resolve) {
+        var img = new Image();
+        img.onload = function() {
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          var aspect = w / h;
+          var maxW = 80;
+          var maxH = 33;
+          if (aspect > (maxW / maxH)) {
+            logoWidth = maxW;
+            logoHeight = maxW / aspect;
+          } else {
+            logoHeight = maxH;
+            logoWidth = maxH * aspect;
+          }
+          resolve();
+        };
+        img.onerror = function() {
+          resolve();
+        };
+        img.src = logoData;
+      });
+    }
+  } catch(e) {}
+
+  var y = ML;
+
+  /* Cabecalho */
+  if (logoData) {
+    var format = 'PNG';
+    if (logoData.startsWith('data:image/')) {
+      var match = logoData.match(/^data:image\/([a-zA-Z+]+);base64/);
+      if (match && match[1]) {
+        var detectedFormat = match[1].toUpperCase();
+        if (detectedFormat === 'JPEG' || detectedFormat === 'JPG') {
+          format = 'JPEG';
+        } else if (detectedFormat === 'PNG') {
+          format = 'PNG';
+        } else if (detectedFormat === 'WEBP') {
+          format = 'WEBP';
+        }
+      }
+    }
+    doc.addImage(logoData, format, ML, y, logoWidth, logoHeight);
+  }
+
+  doc.setFontSize(12).setFont(undefined, 'bold').setTextColor(14, 165, 233);
+  doc.text('HIDRO G BOMBAS SUBMERSAS LTDA.', MR, y + 4, { align: 'right' });
+  doc.setFontSize(8.5).setFont(undefined, 'normal').setTextColor(80, 80, 80);
+  doc.text('CNPJ: 12.835.772/0001-22',                 MR, y + 9.5, { align: 'right' });
+  doc.text('Rua Feres Bucater 1461 - Jd. Sao Marco',   MR, y + 14.5, { align: 'right' });
+  doc.text('Sao Jose do Rio Preto - SP',                MR, y + 19.5, { align: 'right' });
+  doc.text('Tel: (17) 3216-5760  -  (17) 98132-4900',  MR, y + 24.5, { align: 'right' });
+  
+  var textBottom = y + 24.5;
+  var logoBottom = logoData ? (y + logoHeight) : y;
+  y = Math.max(textBottom, logoBottom) + 4;
+
+  doc.setDrawColor(14, 165, 233).setLineWidth(0.6).line(ML, y, MR, y);
+  y += 6;
+
+  /* Titulo */
+  doc.setFontSize(13).setFont(undefined, 'bold').setTextColor(14, 165, 233);
+  doc.text('RECIBO COMERCIAL - ' + b.id, PW / 2, y, { align: 'center' });
+  
+  var vl = b.valores || {};
+  var total = b.totalNumber != null ? b.totalNumber : (vl.total || 0);
+  doc.setFontSize(11).setFont(undefined, 'bold').setTextColor(15, 23, 42);
+  doc.text('VALOR: ' + currencyBR(total), MR, y, { align: 'right' });
+  y += 4;
+  doc.setDrawColor(210, 210, 210).setLineWidth(0.2).line(ML, y, MR, y);
+  y += 6;
+
+  /* Texto do Recibo */
+  var c = b.client || {};
+  var docCliente = c.doc || '-';
+  var nomeCliente = b.clientName || c.name || '-';
+  
+  var status = b.status || (b.extras && b.extras.status) || 'Aberto';
+  var docTipo = (status === 'Aprovado' || status === 'Pago') ? 'Pedido' : 'Orçamento';
+  var textoRecibo = "Recebemos de " + nomeCliente + ", inscrito no CPF/CNPJ sob o nº " + docCliente + ", a importância de " + currencyBR(total) + " (" + valorPorExtensoSimples(total) + ") referente aos produtos/serviços descritos abaixo no " + docTipo + " de nº " + b.id + ".";
+
+  doc.setFontSize(9.5).setFont(undefined, 'normal').setTextColor(40, 40, 40);
+  var lines = doc.splitTextToSize(textoRecibo, CW);
+  doc.text(lines, ML, y);
+  y += (lines.length * 5) + 6;
+
+  /* Tabela de Itens */
+  doc.setFillColor(240, 249, 255); doc.rect(ML, y, CW, 7, 'F');
+  doc.setFillColor(14, 165, 233); doc.rect(ML, y, 3, 7, 'F');
+  doc.setFontSize(8.5).setFont(undefined, 'bold').setTextColor(3, 105, 161);
+  doc.text('DESCRIÇÃO DOS ITENS QUITADOS', ML + 5, y + 5);
+  y += 9;
+
+  var items = b.items.filter(function(it) { return it.descricao || it.qtd > 0; });
+  doc.autoTable({
+    startY: y, margin: { left: ML, right: ML },
+    head: [[
+      { content: '#', styles: { halign: 'center' } },
+      'Descrição',
+      { content: 'Qtd', styles: { halign: 'center' } },
+      { content: 'Valor Unit.', styles: { halign: 'right' } },
+      { content: 'Total', styles: { halign: 'right' } }
+    ]],
+    body: items.map(function(it, i) {
+      return [
+        { content: String(i + 1), styles: { halign: 'center' } },
+        it.descricao || '-',
+        { content: String(it.qtd || 0), styles: { halign: 'center' } },
+        { content: currencyBR(it.unitario || it.unit || 0), styles: { halign: 'right' } },
+        { content: currencyBR(it.total || 0), styles: { halign: 'right' } }
+      ];
+    }),
+    styles: { fontSize: 8, cellPadding: 2, textColor: [40, 40, 40] },
+    columnStyles: {
+      0: { cellWidth: 8 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 12 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 28 }
+    },
+    headStyles: { fillColor: BRAND, textColor: [255, 255, 255], fontStyle: 'bold' },
+    theme: 'striped', pageBreak: 'avoid'
+  });
+  y = doc.autoTable.previous.finalY + 6;
+
+  /* Parcelas (se existirem) */
+  var parcelas = b.parcelas || [];
+  if (parcelas.length > 0) {
+    doc.setFillColor(240, 249, 255); doc.rect(ML, y, CW, 7, 'F');
+    doc.setFillColor(14, 165, 233); doc.rect(ML, y, 3, 7, 'F');
+    doc.setFontSize(8.5).setFont(undefined, 'bold').setTextColor(3, 105, 161);
+    doc.text('DETALHAMENTO DO PAGAMENTO / CRONOGRAMA DE PARCELAS', ML + 5, y + 5);
+    y += 9;
+
+    doc.autoTable({
+      startY: y, margin: { left: ML, right: ML },
+      head: [[
+        { content: 'Nº Parcela', styles: { halign: 'center' } },
+        { content: 'Vencimento', styles: { halign: 'center' } },
+        { content: 'Valor', styles: { halign: 'right' } },
+        { content: 'Status', styles: { halign: 'center' } }
+      ]],
+      body: parcelas.map(function(p) {
+        var statusStr = p.paid ? 'PAGO' : 'PENDENTE';
+        return [
+          { content: p.number + 'ª Parcela', styles: { halign: 'center' } },
+          { content: fmtBR(p.due), styles: { halign: 'center' } },
+          { content: currencyBR(p.value), styles: { halign: 'right' } },
+          { content: statusStr, styles: { halign: 'center', fontStyle: 'bold', textColor: p.paid ? [16, 185, 129] : [239, 68, 68] } }
+        ];
+      }),
+      styles: { fontSize: 8, cellPadding: 2, textColor: [40, 40, 40] },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 'auto' }
+      },
+      headStyles: { fillColor: BRAND, textColor: [255, 255, 255], fontStyle: 'bold' },
+      theme: 'grid', pageBreak: 'avoid'
+    });
+    y = doc.autoTable.previous.finalY + 6;
+  }
+
+  /* Data e Local e Assinatura */
+  var dataFormatada = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  doc.setFontSize(9).setFont(undefined, 'normal').setTextColor(60, 60, 60);
+  doc.text('São José do Rio Preto - SP, ' + dataFormatada + '.', ML, y);
+  y += 24;
+
+  if (y > PH - 40) {
+    doc.addPage();
+    y = ML + 10;
+  }
+
+  doc.setDrawColor(180, 180, 180).setLineWidth(0.3).line(PW / 2 - 40, y, PW / 2 + 40, y);
+  y += 4;
+  doc.setFontSize(8.5).setFont(undefined, 'bold').setTextColor(40, 40, 40);
+  doc.text('HIDRO G BOMBAS SUBMERSAS LTDA.', PW / 2, y, { align: 'center' });
+  doc.setFontSize(7.5).setFont(undefined, 'normal').setTextColor(100, 100, 100);
+  doc.text('Emissor do Recibo', PW / 2, y + 4.5, { align: 'center' });
+
+  /* Rodape */
+  doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
+  doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
+  doc.text(
+    'HIDRO G BOMBAS SUBMERSAS LTDA.   -   CNPJ: 12.835.772/0001-22   -   Tel: (17) 3216-5760',
+    PW / 2, PH - 9, { align: 'center' }
+  );
+
+  /* Salva */
+  var fn = 'recibo_' + (b.id || 'recibo').replace(/[^\w\-]+/g, '_') + '.pdf';
+  if (download) {
+    doc.save(fn);
+  } else {
+    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+  }
+}
+
+/* Função utilitária para extenso simples em BRL */
+function valorPorExtensoSimples(valor) {
+  var unico = ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
+  var dezenas = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+  var centenas = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+
+  function converterGrupo(n) {
+    if (n === 100) return "cem";
+    var c = Math.floor(n / 100);
+    var d = Math.floor((n % 100) / 10);
+    var u = n % 10;
+    var partes = [];
+    if (c > 0) partes.push(centenas[c]);
+    if (d > 1) {
+      partes.push(dezenas[d]);
+      if (u > 0) partes.push(unico[u]);
+    } else if (d === 1 || u > 0) {
+      partes.push(unico[d * 10 + u]);
+    }
+    return partes.join(" e ");
+  }
+
+  try {
+    valor = Math.round(valor * 100) / 100;
+    var inteiro = Math.floor(valor);
+    var centavos = Math.round((valor - inteiro) * 100);
+    
+    var texto = "";
+    if (inteiro === 0) {
+      texto = "zero reais";
+    } else {
+      var partesReais = [];
+      var milhares = Math.floor(inteiro / 1000);
+      var resto = inteiro % 1000;
+      
+      if (milhares > 0) {
+        if (milhares === 1) {
+          partesReais.push("mil");
+        } else {
+          partesReais.push(converterGrupo(milhares) + " mil");
+        }
+      }
+      if (resto > 0) {
+        partesReais.push(converterGrupo(resto));
+      }
+      
+      texto = partesReais.join(" e ") + (inteiro === 1 ? " real" : " reais");
+    }
+
+    if (centavos > 0) {
+      texto += " e " + converterGrupo(centavos) + (centavos === 1 ? " centavo" : " centavos");
+    }
+    return texto;
+  } catch(e) {
+    return "reais";
+  }
+}
+
+/* Navbar Dinâmica */
+function injectNavbar(activePage) {
+  var header = document.createElement('header');
+  header.className = 'site-header navbar navbar-expand-md navbar-light no-print';
+  
+  var isHome = activePage === 'home';
+  var isRel = activePage === 'relatorio';
+  var isCad = activePage === 'cadastro';
+  var isProd = activePage === 'produtos';
+
+  header.innerHTML = `
+    <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
+      <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="headerNav">
+        <nav class="d-flex flex-column flex-md-row gap-2 ms-auto align-items-md-center">
+          <a class="btn ${isHome ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
+          <a class="btn ${isRel ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
+          <a class="btn ${isCad ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="cadastro.html"><i class="fa-solid fa-plus"></i> Novo</a>
+          <a class="btn ${isProd ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="produtos.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
+          <button class="btn btn-sm btn-soft-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+        </nav>
+      </div>
+    </div>
+  `;
+
+  document.body.insertBefore(header, document.body.firstChild);
+}
+
+/* Exportação CSV */
+function exportToCSV(headers, rows, filename) {
+  var csvContent = "\uFEFF"; // BOM para o Excel ler caracteres acentuados corretamente (UTF-8)
+  
+  // Adiciona cabeçalhos
+  csvContent += headers.join(";") + "\r\n";
+  
+  // Adiciona linhas
+  rows.forEach(function(row) {
+    var line = row.map(function(val) {
+      var stringVal = val === null || val === undefined ? '' : String(val);
+      // Escapa aspas duplas dobrando-as
+      stringVal = stringVal.replace(/"/g, '""');
+      // Envolve em aspas se contiver caracteres especiais
+      if (stringVal.includes(';') || stringVal.includes('\n') || stringVal.includes('\r') || stringVal.includes('"')) {
+        stringVal = '"' + stringVal + '"';
+      }
+      return stringVal;
+    }).join(";");
+    csvContent += line + "\r\n";
+  });
+  
+  var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.setAttribute('download', filename || 'export.csv');
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function openPaymentRegistrationModal(budget, onSavedCallback) {
+  var modalId = 'globalPaymentModal';
+  var modalEl = document.getElementById(modalId);
+  if (!modalEl) {
+    modalEl = document.createElement('div');
+    modalEl.id = modalId;
+    modalEl.className = 'modal fade';
+    modalEl.setAttribute('tabindex', '-1');
+    modalEl.setAttribute('aria-hidden', 'true');
+    modalEl.innerHTML = `
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white py-2">
+            <h6 class="modal-title fw-bold"><i class="fa-solid fa-credit-card"></i> Controle de Pagamento - Pedido <span id="gPayModalID"></span></h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded" style="font-size: .85rem;">
+              <div><strong>Cliente:</strong> <span id="gPayModalClient"></span></div>
+              <div><strong>Valor Total:</strong> <span class="fw-bold text-brand" id="gPayModalTotal"></span></div>
+              <div><strong>Status:</strong> <span id="gPayModalStatus"></span></div>
+            </div>
+            
+            <h6 class="fw-bold mb-2" style="font-size: .88rem;"><i class="fa-solid fa-list-ol"></i> Cronograma de Parcelas</h6>
+            <div class="row g-2 mb-3" id="gPayInstallmentsWrapper"></div>
+            
+            <div class="card d-none" id="gPayFormCard">
+              <div class="card-body p-3 bg-success-subtle">
+                <h6 class="fw-bold text-success mb-2" style="font-size: .82rem;"><i class="fa-solid fa-cash-register"></i> Registrar Pagamento para Selecionadas</h6>
+                <div class="row g-2 align-items-end">
+                  <div class="col-md-5">
+                    <label class="form-label fw-semibold mb-1" style="font-size: .75rem;">Forma de Pagamento</label>
+                    <select id="gPaymentMethodSelect" class="form-select form-select-sm">
+                      <option value="Pix">Pix</option>
+                      <option value="Dinheiro">Dinheiro</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Cartão de Débito">Cartão de Débito</option>
+                      <option value="Transferência Bancária">Transferência Bancária</option>
+                      <option value="Boleto">Boleto</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold mb-1" style="font-size: .75rem;">Data do Pagamento</label>
+                    <input type="date" id="gPaymentDateInput" class="form-control form-control-sm">
+                  </div>
+                  <div class="col-md-3">
+                    <button type="button" class="btn btn-sm btn-success w-100" id="btnGPayConfirm">Confirmar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalEl);
+  }
+  
+  document.getElementById('gPayModalID').innerText = '#' + budget.id;
+  document.getElementById('gPayModalClient').innerText = budget.clientName || (budget.client && budget.client.name) || '-';
+  var totalVal = budget.totalNumber != null ? budget.totalNumber : ((budget.valores && budget.valores.total) || 0);
+  document.getElementById('gPayModalTotal').innerText = currencyBR(totalVal);
+  
+  var status = budget.status || 'Aberto';
+  var statusBadge = '';
+  if (status !== 'Aberto') {
+    statusBadge = '<span class="badge-status status-' + status.toLowerCase() + '">' + status + '</span>';
+  } else {
+    var today = todayISO();
+    var due = budget.dueISO || parseValidityToISO(budget.extras && budget.extras.validade, budget.data);
+    var dleft = due ? diffDays(due, today) : NaN;
+    var st = statusInfoByDleft(dleft);
+    statusBadge = '<span class="badge-status ' + st.key + '">' + st.label + '</span>';
+  }
+  document.getElementById('gPayModalStatus').innerHTML = statusBadge;
+  
+  function renderGInstallments() {
+    var wrapper = document.getElementById('gPayInstallmentsWrapper');
+    wrapper.innerHTML = '';
+    
+    var parcelas = budget.parcelas || [];
+    if (parcelas.length === 0) {
+      wrapper.innerHTML = '<div class="col-12 text-center py-3 text-muted">Nenhum cronograma de parcelas cadastrado para este pedido. Edite o pedido para criar parcelas.</div>';
+      document.getElementById('gPayFormCard').classList.add('d-none');
+      return;
+    }
+    
+    parcelas.forEach(function(p, idx) {
+      var col = document.createElement('div');
+      col.className = 'col-12 col-md-4 mb-2';
+      
+      var badgeHtml = '';
+      var selectHtml = '';
+      var detailsHtml = '';
+      
+      if (p.paid) {
+        badgeHtml = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-1 px-2" style="font-size:.7rem"><i class="fa-solid fa-circle-check"></i> Pago</span>`;
+        var methodStr = p.paymentMethod || 'Não informada';
+        var dateStr = p.paymentDate ? fmtBR(p.paymentDate) : 'Não informada';
+        detailsHtml = `<div class="text-success fw-semibold mt-1" style="font-size: .7rem; line-height: 1.1;">
+                         <i class="fa-solid fa-receipt"></i> ${methodStr} em ${dateStr}
+                       </div>`;
+        selectHtml = `<a href="#" class="btn-gpay-estorno text-danger text-decoration-none fw-bold" style="font-size: .7rem;" data-idx="${idx}"><i class="fa-solid fa-undo"></i> Estornar</a>`;
+      } else {
+        badgeHtml = `<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill py-1 px-2" style="font-size:.7rem">Pendente</span>`;
+        selectHtml = `
+          <div class="form-check mb-0">
+            <input class="form-check-input gpay-select-to-pay" type="checkbox" id="gsel_${idx}" data-idx="${idx}">
+            <label class="form-check-label fw-semibold text-muted" for="gsel_${idx}" style="font-size: .75rem; cursor: pointer;">Selecionar</label>
+          </div>
+        `;
+      }
+      
+      col.innerHTML = `
+        <div class="card p-2 border-brand-50" style="background-color: var(--brand-50); border-radius: 8px;">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <span class="fw-bold" style="font-size: .8rem; color: var(--brand-700);">${p.number}ª Parcela</span>
+            ${selectHtml}
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold text-dark" style="font-size: .82rem;">${currencyBR(p.value)}</span>
+            <span class="text-muted" style="font-size: .75rem;">Venc. ${fmtBR(p.due)}</span>
+          </div>
+          <div class="d-flex align-items-center justify-content-between">
+            ${badgeHtml}
+          </div>
+          ${detailsHtml}
+        </div>
+      `;
+      
+      var estornoBtn = col.querySelector('.btn-gpay-estorno');
+      if (estornoBtn) {
+        estornoBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          var index = parseInt(this.dataset.idx, 10);
+          sysConfirm('Deseja estornar o pagamento desta parcela?', async function() {
+            budget.parcelas[index].paid = false;
+            delete budget.parcelas[index].paymentMethod;
+            delete budget.parcelas[index].paymentDate;
+            
+            var allPaid = budget.parcelas.every(function(x) { return x.paid; });
+            if (!allPaid && budget.status === 'Pago') {
+              budget.status = 'Aprovado';
+              if (budget.extras) budget.extras.status = 'Aprovado';
+            }
+            
+            await BudgetDB.save(budget);
+            
+            var status = budget.status;
+            var statusBadge = status !== 'Aberto' ? '<span class="badge-status status-' + status.toLowerCase() + '">' + status + '</span>' : '';
+            document.getElementById('gPayModalStatus').innerHTML = statusBadge;
+            
+            renderGInstallments();
+            if (onSavedCallback) onSavedCallback(budget);
+            showToast('Pagamento estornado com sucesso!', 'success');
+          });
+        });
+      }
+      
+      wrapper.appendChild(col);
+    });
+    
+    updateGPayFormVisibility();
+    
+    wrapper.querySelectorAll('.gpay-select-to-pay').forEach(function(chk) {
+      chk.addEventListener('change', updateGPayFormVisibility);
+    });
+  }
+  
+  function updateGPayFormVisibility() {
+    var selected = document.querySelectorAll('.gpay-select-to-pay:checked');
+    var formCard = document.getElementById('gPayFormCard');
+    if (selected.length > 0) {
+      formCard.classList.remove('d-none');
+      document.getElementById('gPaymentDateInput').value = todayISO();
+    } else {
+      formCard.classList.add('d-none');
+    }
+  }
+  
+  var btnConfirm = document.getElementById('btnGPayConfirm');
+  btnConfirm.replaceWith(btnConfirm.cloneNode(true));
+  btnConfirm = document.getElementById('btnGPayConfirm');
+  
+  btnConfirm.addEventListener('click', async function() {
+    var selected = document.querySelectorAll('.gpay-select-to-pay:checked');
+    if (selected.length === 0) return;
+    
+    var method = document.getElementById('gPaymentMethodSelect').value;
+    var date = document.getElementById('gPaymentDateInput').value || todayISO();
+    
+    selected.forEach(function(chk) {
+      var idx = parseInt(chk.dataset.idx, 10);
+      budget.parcelas[idx].paid = true;
+      budget.parcelas[idx].paymentMethod = method;
+      budget.parcelas[idx].paymentDate = date;
+    });
+    
+    var allPaid = budget.parcelas.every(function(x) { return x.paid; });
+    if (allPaid) {
+      budget.status = 'Pago';
+      if (budget.extras) budget.extras.status = 'Pago';
+    }
+    
+    await BudgetDB.save(budget);
+    
+    var status = budget.status;
+    var statusBadge = status !== 'Aberto' ? '<span class="badge-status status-' + status.toLowerCase() + '">' + status + '</span>' : '';
+    document.getElementById('gPayModalStatus').innerHTML = statusBadge;
+    
+    renderGInstallments();
+    if (onSavedCallback) onSavedCallback(budget);
+    showToast('Pagamento registrado com sucesso!', 'success');
+  });
+  
+  renderGInstallments();
+  var myModal = new bootstrap.Modal(modalEl);
+  myModal.show();
 }
 

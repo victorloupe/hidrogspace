@@ -7,75 +7,77 @@
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
-<header class="site-header navbar navbar-expand-md navbar-light">
-  <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
-    <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
-    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end" id="headerNav">
-      <nav class="d-flex flex-column flex-md-row gap-2 ms-auto">
-        <a class="btn btn-brand btn-sm text-white" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
-        <a class="btn btn-outline-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
-        <a class="btn btn-outline-secondary btn-sm" href="cadastro.html"><i class="fa-solid fa-plus"></i> Novo</a>
-        <a class="btn btn-outline-secondary btn-sm" href="produtos.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
-        <button class="btn btn-sm btn-outline-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
-      </nav>
-    </div>
-  </div>
-</header>
+<!-- O cabeçalho será injetado dinamicamente via injectNavbar('home') -->
 
 <div class="wrap">
 
-  <!-- KPIs -->
-  <div class="row g-3 mb-4" id="kpiRow">
-    <div class="col-6 col-md-3">
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background:#eff6ff;color:#3b82f6"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-        <div>
-          <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em">Total</div>
-          <div class="fw-bold" style="font-size:1.1rem; line-height:1.2" id="kpiTotal">—</div>
-          <div class="text-muted fw-semibold" style="font-size:.8rem" id="kpiTotalVal">R$ 0,00</div>
+  <!-- Dashboard Compacto (KPIs à esquerda, Gráfico à direita) -->
+  <div class="row g-2 mb-3">
+    <!-- Coluna da Esquerda (KPIs) -->
+    <div class="col-12 col-md-4 d-flex flex-column gap-2" id="kpiRow">
+      <a href="relatorio.html?filter=ok" class="text-decoration-none text-reset">
+        <div class="kpi-card py-2 px-3">
+          <div class="kpi-icon" style="background:#eff6ff;color:#3b82f6"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+          <div>
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Orçamentos Abertos</div>
+            <div class="fw-bold" style="font-size:1rem; line-height:1.2" id="kpiOrcAbertos">—</div>
+            <div class="text-muted fw-semibold" style="font-size:.75rem" id="kpiOrcAbertosVal">R$ 0,00</div>
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="fa-solid fa-clock"></i></div>
-        <div>
-          <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em">Vence em breve</div>
-          <div class="fw-bold" style="font-size:1.1rem; line-height:1.2" id="kpiSoon">—</div>
-          <div class="text-muted fw-semibold" style="font-size:.8rem" id="kpiSoonVal">R$ 0,00</div>
+      </a>
+      <a href="relatorio.html?filter=expired" class="text-decoration-none text-reset">
+        <div class="kpi-card py-2 px-3">
+          <div class="kpi-icon" style="background:#fee2e2;color:#ef4444"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Orçamentos c/ Alerta</div>
+            <div class="fw-bold" style="font-size:1rem; line-height:1.2" id="kpiOrcAlerta">—</div>
+            <div class="text-muted fw-semibold" style="font-size:.75rem" id="kpiOrcAlertaVal">R$ 0,00</div>
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background:#fee2e2;color:#ef4444"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div>
-          <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em">Vencidos</div>
-          <div class="fw-bold" style="font-size:1.1rem; line-height:1.2" id="kpiExpired">—</div>
-          <div class="text-muted fw-semibold" style="font-size:.8rem" id="kpiExpiredVal">R$ 0,00</div>
+      </a>
+      <a href="relatorio.html?filter=aprovado" class="text-decoration-none text-reset">
+        <div class="kpi-card py-2 px-3">
+          <div class="kpi-icon" style="background:#e0f2fe;color:#0284c7"><i class="fa-solid fa-clock"></i></div>
+          <div>
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Pedidos Aprovados</div>
+            <div class="fw-bold" style="font-size:1rem; line-height:1.2" id="kpiPedAprovados">—</div>
+            <div class="text-muted fw-semibold" style="font-size:.75rem" id="kpiPedAprovadosVal">R$ 0,00</div>
+          </div>
         </div>
-      </div>
+      </a>
+      <a href="relatorio.html?filter=pago" class="text-decoration-none text-reset">
+        <div class="kpi-card py-2 px-3">
+          <div class="kpi-icon" style="background:#d1fae5;color:#10b981"><i class="fa-solid fa-check-circle"></i></div>
+          <div>
+            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Pedidos Pagos</div>
+            <div class="fw-bold" style="font-size:1rem; line-height:1.2" id="kpiPedPagos">—</div>
+            <div class="text-muted fw-semibold" style="font-size:.75rem" id="kpiPedPagosVal">R$ 0,00</div>
+          </div>
+        </div>
+      </a>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background:#d1fae5;color:#10b981"><i class="fa-solid fa-check-circle"></i></div>
-        <div>
-          <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.04em">Em aberto</div>
-          <div class="fw-bold" style="font-size:1.1rem; line-height:1.2" id="kpiOpen">—</div>
-          <div class="text-muted fw-semibold" style="font-size:.8rem" id="kpiOpenVal">R$ 0,00</div>
+
+    <!-- Coluna da Direita (Gráfico) -->
+    <div class="col-12 col-md-8">
+      <div class="card h-100">
+        <div class="card-body d-flex flex-column p-3">
+          <h6 class="mb-2 fw-bold d-flex align-items-center gap-2" style="font-size: .88rem;">
+            <i class="fa-solid fa-chart-line" style="color:var(--brand)"></i>
+            Faturamento Mensal (Últimos 6 Meses)
+          </h6>
+          <div class="flex-grow-1" style="position: relative; min-height: 190px; width: 100%;">
+            <canvas id="salesChart"></canvas>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Acoes rapidas -->
-  <div class="row g-3 mb-4">
+  <div class="row g-2 mb-3">
     <div class="col-12 col-md-6">
       <div class="card h-100">
         <div class="card-body d-flex align-items-center gap-3">
@@ -86,7 +88,7 @@
             <h6 class="mb-1 fw-bold">Novo Orçamento</h6>
             <p class="text-muted mb-0" style="font-size:.85rem">Crie um orçamento rapidamente</p>
           </div>
-          <a class="btn btn-brand" href="cadastro.html" id="btnNovo">
+          <a class="btn btn-soft-primary" href="cadastro.html" id="btnNovo">
             <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
@@ -99,10 +101,10 @@
             <i class="fa-solid fa-list-check"></i>
           </div>
           <div class="flex-grow-1">
-            <h6 class="mb-1 fw-bold">Todos os Orçamentos</h6>
+            <h6 class="mb-1 fw-bold">Todos os Orçamentos / Pedidos</h6>
             <p class="text-muted mb-0" style="font-size:.85rem">Veja, edite e gerencie</p>
           </div>
-          <a class="btn btn-outline-secondary" href="relatorio.html">
+          <a class="btn btn-soft-secondary" href="relatorio.html">
             <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
@@ -110,36 +112,63 @@
     </div>
   </div>
 
-  <!-- Vencendo em breve -->
-  <div class="card">
-    <div class="card-body p-0">
-      <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
-        <div class="d-flex align-items-center gap-2">
-          <i class="fa-regular fa-hourglass-half" style="color:var(--brand)"></i>
-          <h6 class="mb-0 fw-bold">Vencem nos próximos 10 dias</h6>
+  <!-- Tabelas Separadas de Orçamentos e Pedidos -->
+  <div class="row g-2">
+    <!-- Coluna Orçamentos -->
+    <div class="col-12 col-md-6">
+      <div class="card h-100">
+        <div class="card-body p-0">
+          <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fa-regular fa-hourglass-half" style="color:var(--brand)"></i>
+              <h6 class="mb-0 fw-bold" style="font-size: .88rem;">Orçamentos em Negociação (Alertas)</h6>
+            </div>
+            <span class="badge bg-warning text-dark" id="countSoon">0</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table mb-0" style="font-size: .78rem;">
+              <thead>
+                <tr>
+                  <th>#</th><th>Cliente</th><th>Total</th><th>Validade</th><th class="text-end" style="width:100px;"></th>
+                </tr>
+              </thead>
+              <tbody id="tbodySoon">
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted">Carregando orçamentos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <span class="chip"><span id="countSoon">0</span> próximos</span>
       </div>
-      <div class="table-responsive">
-        <table class="table mb-0">
-          <thead>
-            <tr>
-              <th>#</th><th>Cliente</th><th>Total</th>
-              <th>Emissão</th><th>Validade</th><th>Status</th><th style="width:90px;"></th>
-            </tr>
-          </thead>
-          <tbody id="tbodySoon">
-            <tr>
-              <td colspan="7" class="text-center py-4">
-                <div class="water-loader">
-                  <div class="drop"></div>
-                  <div class="wave"></div>
-                  <div class="loader-text">Carregando orçamentos...</div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    </div>
+
+    <!-- Coluna Pedidos -->
+    <div class="col-12 col-md-6">
+      <div class="card h-100">
+        <div class="card-body p-0">
+          <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fa-solid fa-cart-shopping" style="color:#16a34a"></i>
+              <h6 class="mb-0 fw-bold" style="font-size: .88rem;">Pedidos Recentes (Aprovados / Pagos)</h6>
+            </div>
+            <span class="badge bg-success" id="countPedidos">0</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table mb-0" style="font-size: .78rem;">
+              <thead>
+                <tr>
+                  <th>#</th><th>Cliente</th><th>Total</th><th>Status</th><th class="text-end" style="width:140px;"></th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPedidos">
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted">Carregando pedidos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -150,16 +179,132 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.6.0/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="utils.js?v=3"></script>
 <script>
-function makeBadge(st) {
+function makeBadge(st, status) {
+  if (status && status !== 'Aberto') {
+    var cls = 'status-' + status.toLowerCase();
+    return '<span class="badge-status ' + cls + '">' + status + '</span>';
+  }
   return '<span class="badge-status ' + st.key + '">' + st.label + '</span>';
+}
+
+var allBudgetsForChart = null;
+var myChart = null;
+
+function renderChart(budgets) {
+  var canvas = document.getElementById('salesChart');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  
+  // Agrupar faturamento por mês (últimos 6 meses)
+  var monthlyData = {};
+  var monthsNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  
+  // Gerar os últimos 6 meses cronologicamente
+  var labels = [];
+  var keys = [];
+  var today = new Date();
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    var label = monthsNames[d.getMonth()] + '/' + String(d.getFullYear()).slice(-2);
+    var key = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+    labels.push(label);
+    keys.push(key);
+    monthlyData[key] = { pedidos: 0, orcamentos: 0 };
+  }
+  
+  // Preencher com faturamento real e orçamentos em aberto
+  budgets.forEach(function(b) {
+    var dateStr = b.issueISO || parseBRDateToISO(b.data);
+    if (dateStr && dateStr.length >= 7) {
+      var key = dateStr.slice(0, 7); // yyyy-mm
+      if (monthlyData[key] !== undefined) {
+        var total = b.totalNumber != null ? b.totalNumber : ((b.valores && b.valores.total) || 0);
+        var status = b.status || (b.extras && b.extras.status) || 'Aberto';
+        if (status === 'Aprovado' || status === 'Pago') {
+          monthlyData[key].pedidos += total;
+        } else {
+          monthlyData[key].orcamentos += total;
+        }
+      }
+    }
+  });
+  
+  var datasetPedidos = keys.map(function(key) { return monthlyData[key].pedidos; });
+  var datasetOrcamentos = keys.map(function(key) { return monthlyData[key].orcamentos; });
+  
+  var textColor = '#64748b';
+  var gridColor = '#e2e8f0';
+
+  if (myChart) {
+    myChart.destroy();
+  }
+  
+  myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Pedidos (Aprovados/Pagos)',
+          data: datasetPedidos,
+          backgroundColor: 'rgba(16, 185, 129, 0.85)',
+          borderColor: 'rgb(16, 185, 129)',
+          borderWidth: 1,
+          borderRadius: 6,
+          barPercentage: 0.6
+        },
+        {
+          label: 'Orçamentos (Em Aberto)',
+          data: datasetOrcamentos,
+          backgroundColor: 'rgba(14, 165, 233, 0.5)',
+          borderColor: 'rgb(14, 165, 233)',
+          borderWidth: 1,
+          borderRadius: 6,
+          barPercentage: 0.6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return ' ' + currencyBR(context.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: textColor, font: { family: 'Segoe UI, system-ui, sans-serif', size: 11 } }
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: textColor,
+            font: { family: 'Segoe UI, system-ui, sans-serif', size: 11 },
+            callback: function(value) {
+              return 'R$ ' + value.toLocaleString('pt-BR');
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 async function renderPage() {
   var startTime = Date.now();
   var today = todayISO();
   var all = (await BudgetDB.getAll()).filter(Boolean);
+  allBudgetsForChart = all;
 
   // Garante que o efeito completo da gota (1.8s) seja finalizado antes de renderizar
   var elapsed = Date.now() - startTime;
@@ -168,12 +313,15 @@ async function renderPage() {
     await new Promise(function(resolve) { setTimeout(resolve, minDuration - elapsed); });
   }
 
+  // Renderiza o gráfico
+  renderChart(all);
+
   // KPIs
   var kpi = {
-    total:   { count: 0, val: 0 },
-    soon:    { count: 0, val: 0 },
-    expired: { count: 0, val: 0 },
-    open:    { count: 0, val: 0 }
+    orcAbertos:   { count: 0, val: 0 },
+    orcAlerta:    { count: 0, val: 0 },
+    pedAprovados: { count: 0, val: 0 },
+    pedPagos:     { count: 0, val: 0 }
   };
   all.forEach(function(o) {
     var due = o.dueISO || parseValidityToISO(o.extras && o.extras.validade, o.data);
@@ -181,71 +329,138 @@ async function renderPage() {
     var st = statusInfoByDleft(dleft);
     var totalVal = o.totalNumber != null ? o.totalNumber : ((o.valores && o.valores.total) || 0);
 
-    kpi.total.count++;
-    kpi.total.val += totalVal;
-
-    if (st.key === 'expired') {
-      kpi.expired.count++;
-      kpi.expired.val += totalVal;
-    } else if (st.key === 'soon' || st.key === 'today') {
-      kpi.soon.count++;
-      kpi.soon.val += totalVal;
-    } else {
-      kpi.open.count++;
-      kpi.open.val += totalVal;
+    var status = o.status || (o.extras && o.extras.status) || 'Aberto';
+    if (status === 'Aberto') {
+      if (st.key === 'expired' || st.key === 'soon' || st.key === 'today') {
+        kpi.orcAlerta.count++;
+        kpi.orcAlerta.val += totalVal;
+      } else {
+        kpi.orcAbertos.count++;
+        kpi.orcAbertos.val += totalVal;
+      }
+    } else if (status === 'Aprovado') {
+      kpi.pedAprovados.count++;
+      kpi.pedAprovados.val += totalVal;
+    } else if (status === 'Pago') {
+      kpi.pedPagos.count++;
+      kpi.pedPagos.val += totalVal;
     }
   });
-  document.getElementById('kpiTotal').textContent      = kpi.total.count + (kpi.total.count === 1 ? ' orçamento' : ' orçamentos');
-  document.getElementById('kpiTotalVal').textContent   = currencyBR(kpi.total.val);
-  document.getElementById('kpiSoon').textContent       = kpi.soon.count + (kpi.soon.count === 1 ? ' orçamento' : ' orçamentos');
-  document.getElementById('kpiSoonVal').textContent    = currencyBR(kpi.soon.val);
-  document.getElementById('kpiExpired').textContent    = kpi.expired.count + (kpi.expired.count === 1 ? ' orçamento' : ' orçamentos');
-  document.getElementById('kpiExpiredVal').textContent = currencyBR(kpi.expired.val);
-  document.getElementById('kpiOpen').textContent       = kpi.open.count + (kpi.open.count === 1 ? ' orçamento' : ' orçamentos');
-  document.getElementById('kpiOpenVal').textContent    = currencyBR(kpi.open.val);
+  
+  document.getElementById('kpiOrcAbertos').textContent    = kpi.orcAbertos.count + (kpi.orcAbertos.count === 1 ? ' orçamento' : ' orçamentos');
+  document.getElementById('kpiOrcAbertosVal').textContent = currencyBR(kpi.orcAbertos.val);
+  
+  document.getElementById('kpiOrcAlerta').textContent     = kpi.orcAlerta.count + (kpi.orcAlerta.count === 1 ? ' orçamento' : ' orçamentos');
+  document.getElementById('kpiOrcAlertaVal').textContent  = currencyBR(kpi.orcAlerta.val);
+  
+  document.getElementById('kpiPedAprovados').textContent  = kpi.pedAprovados.count + (kpi.pedAprovados.count === 1 ? ' pedido' : ' pedidos');
+  document.getElementById('kpiPedAprovadosVal').textContent = currencyBR(kpi.pedAprovados.val);
+  
+  document.getElementById('kpiPedPagos').textContent      = kpi.pedPagos.count + (kpi.pedPagos.count === 1 ? ' pedido' : ' pedidos');
+  document.getElementById('kpiPedPagosVal').textContent   = currencyBR(kpi.pedPagos.val);
 
-  // Tabela vencendo em breve
-  var list = all.map(function(o) {
+  // 1. Tabela de Orçamentos (Em Negociação / Alertas)
+  var listOrcamentos = all.map(function(o) {
     var issue = o.issueISO || parseBRDateToISO(o.data);
     var due   = o.dueISO   || parseValidityToISO(o.extras && o.extras.validade, o.data);
     var dleft = due ? diffDays(due, today) : NaN;
     return Object.assign({}, o, {issue:issue, due:due, dleft:dleft});
   }).filter(function(x) {
-    return Number.isFinite(x.dleft) && x.dleft >= 0 && x.dleft <= 10;
+    var status = x.status || (x.extras && x.extras.status) || 'Aberto';
+    return status === 'Aberto' && Number.isFinite(x.dleft) && x.dleft <= 10;
   }).sort(function(a,b) { return (a.due||'').localeCompare(b.due||''); });
 
-  document.getElementById('countSoon').textContent = list.length;
-  var tbody = document.getElementById('tbodySoon');
-  tbody.innerHTML = '';
+  document.getElementById('countSoon').textContent = listOrcamentos.length;
+  var tbodySoon = document.getElementById('tbodySoon');
+  tbodySoon.innerHTML = '';
 
-  if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Nenhum orçamento vencendo nos próximos 10 dias.</td></tr>';
-    return;
+  if (!listOrcamentos.length) {
+    tbodySoon.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhum orçamento em alerta nos próximos dias.</td></tr>';
+  } else {
+    listOrcamentos.forEach(function(qo) {
+      var st = statusInfoByDleft(qo.dleft);
+      var total = qo.totalNumber != null ? qo.totalNumber : ((qo.valores && qo.valores.total)||0);
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="fw-semibold" style="color:var(--brand)">' + (qo.id||'-') + '</td>' +
+        '<td>' + (qo.clientName||(qo.client&&qo.client.name)||'-') + '</td>' +
+        '<td class="fw-semibold">' + currencyBR(total) + '</td>' +
+        '<td class="text-muted">' + fmtBR(qo.due) + '</td>' +
+        '<td class="no-print text-nowrap text-end">' +
+          '<div class="d-flex justify-content-end gap-1">' +
+            '<a class="btn btn-sm btn-soft-secondary btn-table-action" href="cadastro.html?id=' + encodeURIComponent(qo.id) + '" title="Editar"><i class="fa-solid fa-pen-to-square"></i></a>' +
+            '<button class="btn btn-sm btn-soft-success btn-table-action btn-print" data-id="' + qo.id + '" title="Imprimir"><i class="fa-solid fa-print"></i></button>' +
+          '</div>' +
+        '</td>';
+      tbodySoon.appendChild(tr);
+    });
   }
-  list.forEach(function(qo) {
-    var st = statusInfoByDleft(qo.dleft);
-    var total = qo.totalNumber != null ? qo.totalNumber : ((qo.valores && qo.valores.total)||0);
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td class="fw-semibold" style="color:var(--brand)">' + (qo.id||'-') + '</td>' +
-      '<td>' + (qo.clientName||(qo.client&&qo.client.name)||'-') + '</td>' +
-      '<td class="fw-semibold">' + currencyBR(total) + '</td>' +
-      '<td class="text-muted">' + fmtBR(qo.issue) + '</td>' +
-      '<td class="text-muted">' + fmtBR(qo.due) + '</td>' +
-      '<td>' + makeBadge(st) + '</td>' +
-      '<td class="text-nowrap">' +
-        '<a class="btn btn-sm btn-outline-secondary btn-table-action me-1" href="cadastro.html?id=' + encodeURIComponent(qo.id) + '" title="Editar"><i class="fa-solid fa-pen-to-square"></i></a>' +
-        '<button class="btn btn-sm btn-outline-success btn-table-action btn-print" data-id="' + qo.id + '" title="Imprimir"><i class="fa-solid fa-print"></i></button>' +
-      '</td>';
-    tbody.appendChild(tr);
-  });
 
-  tbody.querySelectorAll('.btn-print').forEach(function(btn) {
+  // 2. Tabela de Pedidos Recentes
+  var listPedidos = all.map(function(o) {
+    var issue = o.issueISO || parseBRDateToISO(o.data);
+    return Object.assign({}, o, {issue:issue});
+  }).filter(function(x) {
+    var status = x.status || (x.extras && x.extras.status) || 'Aberto';
+    return status === 'Aprovado' || status === 'Pago';
+  }).sort(function(a,b) { return (b.issue||'').localeCompare(a.issue||''); }).slice(0, 10);
+
+  document.getElementById('countPedidos').textContent = listPedidos.length;
+  var tbodyPedidos = document.getElementById('tbodyPedidos');
+  tbodyPedidos.innerHTML = '';
+
+  if (!listPedidos.length) {
+    tbodyPedidos.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhum pedido aprovado ou pago encontrado.</td></tr>';
+  } else {
+    listPedidos.forEach(function(qo) {
+      var total = qo.totalNumber != null ? qo.totalNumber : ((qo.valores && qo.valores.total)||0);
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="fw-semibold" style="color:var(--brand)">' + (qo.id||'-') + '</td>' +
+        '<td>' + (qo.clientName||(qo.client&&qo.client.name)||'-') + '</td>' +
+        '<td class="fw-semibold">' + currencyBR(total) + '</td>' +
+        '<td>' + makeBadge(statusInfoByDleft(NaN), qo.status) + '</td>' +
+        '<td class="no-print text-nowrap text-end">' +
+          '<div class="d-flex justify-content-end gap-1">' +
+            '<button class="btn btn-sm btn-soft-success btn-table-action btn-pay-modal" data-id="' + qo.id + '" title="Registrar Pagamento"><i class="fa-solid fa-credit-card"></i></button>' +
+            '<a class="btn btn-sm btn-soft-secondary btn-table-action" href="cadastro.html?id=' + encodeURIComponent(qo.id) + '" title="Editar"><i class="fa-solid fa-pen-to-square"></i></a>' +
+            '<button class="btn btn-sm btn-soft-success btn-table-action btn-print" data-id="' + qo.id + '" title="Imprimir"><i class="fa-solid fa-print"></i></button>' +
+          '</div>' +
+        '</td>';
+      tbodyPedidos.appendChild(tr);
+    });
+  }
+
+  // Event Listeners para a tabela de Orçamentos
+  tbodySoon.querySelectorAll('.btn-print').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = btn.dataset.id;
-      var budget = list.find(function(item) { return item.id === id; });
+      var budget = listOrcamentos.find(function(item) { return item.id === id; });
       if (budget) {
         gerarPDF(budget, false);
+      }
+    });
+  });
+
+  // Event Listeners para a tabela de Pedidos
+  tbodyPedidos.querySelectorAll('.btn-print').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.dataset.id;
+      var budget = listPedidos.find(function(item) { return item.id === id; });
+      if (budget) {
+        gerarPDF(budget, false);
+      }
+    });
+  });
+
+  tbodyPedidos.querySelectorAll('.btn-pay-modal').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.dataset.id;
+      var budget = listPedidos.find(function(item) { return item.id === id; });
+      if (budget) {
+        openPaymentRegistrationModal(budget, function() {
+          renderPage();
+        });
       }
     });
   });
@@ -257,6 +472,7 @@ document.getElementById('btnNovo').addEventListener('click', function() {
 
 checkAuth().then(function(user) {
   if (user) {
+    injectNavbar('home');
     BudgetDB.migrateFromLocalStorage().then(function() { renderPage(); });
   }
 });

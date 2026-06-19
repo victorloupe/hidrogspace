@@ -18,13 +18,20 @@ create table if not exists budgets (
 
 alter table budgets enable row level security;
 
-create policy "acesso_total" on budgets
-  for all using (true) with check (true);
+-- Limpa políticas anteriores se existirem
+drop policy if exists "acesso_total" on budgets;
+drop policy if exists "acesso_autenticado" on budgets;
+
+create policy "acesso_autenticado" on budgets
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 create or replace function set_updated_at()
 returns trigger as $$
 begin new.updated_at = now(); return new; end;
 $$ language plpgsql;
+
+-- Remove o trigger antigo se existir antes de criar
+drop trigger if exists budgets_updated_at on budgets;
 
 create trigger budgets_updated_at
   before update on budgets
@@ -41,8 +48,15 @@ create table if not exists products (
 
 alter table products enable row level security;
 
-create policy "acesso_total" on products
-  for all using (true) with check (true);
+-- Limpa políticas anteriores se existirem
+drop policy if exists "acesso_total" on products;
+drop policy if exists "acesso_autenticado" on products;
+
+create policy "acesso_autenticado" on products
+  for all using (auth.uid() is not null) with check (auth.uid() is not null);
+
+-- Remove o trigger antigo se existir antes de criar
+drop trigger if exists products_updated_at on products;
 
 create trigger products_updated_at
   before update on products

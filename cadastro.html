@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
   <style>
     #conteudoOrcamento .form-label { font-size:.82rem; color:#475569; margin-bottom:2px; display:block; }
     .row-remove-btn { background:none; border:none; color:#dc2626; cursor:pointer; padding:0 6px; font-size:1rem; opacity:.55; line-height:1; }
@@ -40,23 +40,7 @@
   </style>
 </head>
 <body>
-<header class="site-header navbar navbar-expand-md navbar-light">
-  <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
-    <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
-    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end" id="headerNav">
-      <nav class="d-flex flex-column flex-md-row gap-2 ms-auto">
-        <a class="btn btn-outline-secondary btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
-        <a class="btn btn-outline-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
-        <a class="btn btn-brand btn-sm text-white" href="#" id="navNovoBtn"><i class="fa-solid fa-plus"></i> Novo</a>
-        <a class="btn btn-outline-secondary btn-sm no-print" href="produtos.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
-        <button class="btn btn-sm btn-outline-danger no-print" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
-      </nav>
-    </div>
-  </div>
-</header>
+<!-- O cabeçalho será injetado dinamicamente via injectNavbar('cadastro') -->
 
 <div class="wrap">
 <div class="card border-0 shadow-sm">
@@ -64,13 +48,13 @@
 <div class="container-fluid container-wide py-3" id="conteudoOrcamento">
 
   <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2 mb-3 gap-2" id="orcamentoHeader">
-    <div class="d-flex align-items-center gap-2 flex-grow-1">
-      <span class="brand fw-bold">Orçamento</span>
-      <input id="numeroOrcamento" class="form-control" placeholder="Nº do orçamento" style="width:160px;">
+    <div class="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
+      <span class="brand fw-bold" id="labelOrcamentoPedido">Orçamento</span>
+      <input id="numeroOrcamento" class="form-control" placeholder="Nº do orçamento" style="width:140px;">
     </div>
     <div class="d-flex align-items-center gap-1">
       <input id="dataHoje" class="form-control date-input" placeholder="Data" readonly style="width:120px;text-align:right;">
-      <button class="btn btn-sm btn-outline-secondary" id="btnCalendar" type="button">
+      <button class="btn btn-sm btn-soft-secondary" id="btnCalendar" type="button">
         <i class="fa-solid fa-calendar-day"></i>
       </button>
     </div>
@@ -82,10 +66,10 @@
         <img src="orcamento.png" alt="Logo Hidro G" class="img-fluid" style="max-height:110px;" id="logoImg">
         <div class="logo-actions mt-1 no-print">
           <input type="file" id="logoUploadInput" accept="image/*" class="d-none">
-          <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;" onclick="document.getElementById('logoUploadInput').click()">
+          <button type="button" class="btn btn-sm btn-soft-secondary py-1 px-2" style="font-size: 0.75rem;" onclick="document.getElementById('logoUploadInput').click()">
             <i class="fa-solid fa-image me-1"></i> Alterar Logo
           </button>
-          <button type="button" id="btnResetLogo" class="btn btn-sm btn-outline-danger py-1 px-2 d-none" style="font-size: 0.75rem;" onclick="restaurarLogoPadrao()">
+          <button type="button" id="btnResetLogo" class="btn btn-sm btn-soft-danger py-1 px-2 d-none" style="font-size: 0.75rem;" onclick="restaurarLogoPadrao()">
             <i class="fa-solid fa-trash me-1"></i> Restaurar
           </button>
         </div>
@@ -128,8 +112,8 @@
   </div>
 
   <div class="section-header d-flex justify-content-between align-items-center">
-    <span>Itens do Orçamento</span>
-    <button class="btn btn-sm btn-outline-primary no-print" id="btnAddRow" type="button">
+    <span id="labelItensOrcamentoPedido">Itens do Orçamento</span>
+    <button class="btn btn-sm btn-soft-primary no-print" id="btnAddRow" type="button">
       <i class="fa-solid fa-plus"></i> Adicionar item
     </button>
   </div>
@@ -167,11 +151,52 @@
     <div class="col-12"><label class="form-label">Observações</label><textarea id="notes" class="form-control" rows="2"></textarea></div>
   </div>
 
-  <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap" id="btns">
-    <button class="btn btn-outline-secondary" id="novoOrcamento" type="button"><i class="fa-solid fa-file-circle-plus"></i> <span class="d-none d-sm-inline">Novo</span></button>
-    <button class="btn btn-success" id="btnSalvar" type="button"><i class="fa-solid fa-floppy-disk"></i> <span class="d-none d-sm-inline">Salvar</span></button>
-    <button class="btn btn-danger" id="savePdfButton" type="button"><i class="fa-solid fa-file-pdf"></i> <span class="d-none d-sm-inline">Baixar PDF</span></button>
-    <button class="btn btn-brand text-white" id="printButton" type="button"><i class="fa-solid fa-print"></i> <span class="d-none d-sm-inline">Imprimir PDF</span></button>
+  <div class="section-header d-flex justify-content-between align-items-center mb-2">
+    <span>Controle de Parcelamento / Pagamento</span>
+    <div class="d-flex align-items-center gap-2 no-print">
+      <select id="numInstallments" class="form-select form-select-sm" style="width: 120px;">
+        <option value="0">Sem parcelas</option>
+        <option value="1">1 vez (À vista)</option>
+        <option value="2">2 vezes</option>
+        <option value="3">3 vezes</option>
+        <option value="4">4 vezes</option>
+        <option value="5">5 vezes</option>
+        <option value="6">6 vezes</option>
+        <option value="10">10 vezes</option>
+        <option value="12">12 vezes</option>
+      </select>
+      <button class="btn btn-sm btn-soft-primary" id="btnGenInstallments" type="button">Gerar</button>
+      <button class="btn btn-sm btn-success d-none" id="btnPagarSelected" type="button"><i class="fa-solid fa-credit-card"></i> Pagar Selecionadas</button>
+    </div>
+  </div>
+  <div id="installmentsWrapper" class="row g-2 mb-3">
+    <div class="col-12 text-center py-2 text-muted" id="noInstallmentsMsg" style="font-size: .82rem;">
+      Nenhuma parcela gerada. Selecione a quantidade e clique em "Gerar".
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center gap-2 mt-3 flex-wrap" id="btns">
+    <div class="d-flex align-items-center">
+      <input type="hidden" id="budgetStatus" value="Aberto">
+      <div class="dropdown" id="statusDropdownContainer">
+        <button class="btn btn-sm fw-bold d-flex align-items-center gap-1" type="button" id="statusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--brand-700); background-color: var(--brand-50); border-radius: 8px; padding: .25rem .5rem; height: 31px; font-size: .88rem; min-width: 125px; justify-content: space-between; border: 1px solid transparent !important;">
+          <span><i class="fa-regular fa-hourglass-half"></i> Aberto</span> <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.7;"></i>
+        </button>
+        <ul class="dropdown-menu shadow border-brand-50" aria-labelledby="statusDropdownBtn" style="border-radius: 8px; font-size: .85rem; min-width: 125px;">
+          <li><a class="dropdown-item fw-semibold d-flex align-items-center gap-2" href="#" data-value="Aberto" style="color: var(--brand-700);"><i class="fa-regular fa-hourglass-half"></i> Aberto</a></li>
+          <li><a class="dropdown-item fw-semibold text-success d-flex align-items-center gap-2" href="#" data-value="Aprovado"><i class="fa-solid fa-circle-check"></i> Aprovado</a></li>
+          <li><a class="dropdown-item fw-semibold text-danger d-flex align-items-center gap-2" href="#" data-value="Recusado"><i class="fa-solid fa-circle-xmark"></i> Recusado</a></li>
+          <li><a class="dropdown-item fw-semibold text-success d-flex align-items-center gap-2" href="#" data-value="Pago"><i class="fa-solid fa-credit-card"></i> Pago</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-soft-secondary" id="novoOrcamento" type="button"><i class="fa-solid fa-file-circle-plus"></i> <span class="d-none d-sm-inline">Novo</span></button>
+      <button class="btn btn-soft-primary" id="btnSalvar" type="button"><i class="fa-solid fa-floppy-disk"></i> <span class="d-none d-sm-inline" id="btnSalvarText">Salvar</span></button>
+      <button class="btn btn-soft-danger" id="savePdfButton" type="button"><i class="fa-solid fa-file-pdf"></i> <span class="d-none d-sm-inline">Baixar PDF</span></button>
+      <button class="btn btn-soft-secondary" id="printButton" type="button"><i class="fa-solid fa-print"></i> <span class="d-none d-sm-inline">Imprimir PDF</span></button>
+      <button class="btn btn-soft-success d-none" id="reciboButton" type="button"><i class="fa-solid fa-receipt"></i> <span class="d-none d-sm-inline">Baixar Recibo</span></button>
+    </div>
   </div>
 
 </div>
@@ -198,7 +223,7 @@
       <input id="prodModalPrice" class="form-control" placeholder="R$ 0,00" inputmode="numeric">
     </div>
     <div style="display:flex; gap:12px;">
-      <button class="btn btn-outline-secondary flex-fill" id="prodModalCancel">Cancelar</button>
+      <button class="btn btn-soft-secondary flex-fill" id="prodModalCancel">Cancelar</button>
       <button class="btn btn-brand text-white flex-fill" id="prodModalSave"><i class="fa-solid fa-floppy-disk"></i> Salvar produto</button>
     </div>
   </div>
@@ -225,9 +250,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="utils.js"></script>
+<script src="utils.js?v=3"></script>
 <script>
 var $id = function(id) { return document.getElementById(id); };
+
+var _parcelas = [];
 
 function setVal(id, v) { var el = $id(id); if (el) el.value = (v != null ? v : ''); }
 function getVal(id) { return ($id(id) ? $id(id).value : '').trim(); }
@@ -448,6 +475,142 @@ async function buscarCEP() {
   }
 }
 
+/* Renderizar as parcelas na tela */
+function renderInstallments() {
+  var wrapper = $id('installmentsWrapper');
+  if (!wrapper) return;
+  wrapper.innerHTML = '';
+  
+  if (_parcelas.length === 0) {
+    wrapper.innerHTML = `
+      <div class="col-12 text-center py-2 text-muted" id="noInstallmentsMsg" style="font-size: .82rem;">
+        Nenhuma parcela gerada. Selecione a quantidade e clique em "Gerar".
+      </div>
+    `;
+    updatePagarButtonVisibility();
+    return;
+  }
+  
+  _parcelas.forEach(function(p, idx) {
+    var col = document.createElement('div');
+    col.className = 'col-12 col-sm-6 col-md-4 col-lg-3';
+    
+    var badgeHtml = '';
+    var selectHtml = '';
+    var detailsHtml = '';
+    
+    if (p.paid) {
+      badgeHtml = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-1 px-2" style="font-size:.7rem"><i class="fa-solid fa-circle-check"></i> Pago</span>`;
+      var methodStr = p.paymentMethod || 'Não informada';
+      var dateStr = p.paymentDate ? fmtBR(p.paymentDate) : 'Não informada';
+      detailsHtml = `<div class="text-success fw-semibold mt-1" style="font-size: .7rem; line-height: 1.1;">
+                       <i class="fa-solid fa-receipt"></i> ${methodStr} em ${dateStr}
+                     </div>`;
+      selectHtml = `<a href="#" class="btn-estorno text-danger text-decoration-none fw-bold" style="font-size: .7rem;" data-idx="${idx}"><i class="fa-solid fa-undo"></i> Estornar</a>`;
+    } else {
+      badgeHtml = `<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill py-1 px-2" style="font-size:.7rem">Pendente</span>`;
+      selectHtml = `
+        <div class="form-check mb-0">
+          <input class="form-check-input select-to-pay" type="checkbox" id="sel_${idx}" data-idx="${idx}">
+          <label class="form-check-label fw-semibold text-muted" for="sel_${idx}" style="font-size: .75rem; cursor: pointer;">Selecionar</label>
+        </div>
+      `;
+    }
+
+    col.innerHTML = `
+      <div class="card p-2 border-brand-50" style="background-color: var(--brand-50); border-radius: 8px;">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <span class="fw-bold" style="font-size: .8rem; color: var(--brand-700);">${p.number}ª Parcela</span>
+          ${selectHtml}
+        </div>
+        <div class="d-flex gap-1 mb-1">
+          <input type="text" class="form-control form-control-sm val-input" value="${moneyMask(String(Math.round(p.value * 100)))}" placeholder="Valor" style="font-size: .78rem;" ${p.paid ? 'disabled' : ''}>
+          <input type="date" class="form-control form-control-sm due-input" value="${p.due}" style="font-size: .78rem;" ${p.paid ? 'disabled' : ''}>
+        </div>
+        <div class="d-flex align-items-center justify-content-between">
+          ${badgeHtml}
+        </div>
+        ${detailsHtml}
+      </div>
+    `;
+    
+    var estornoBtn = col.querySelector('.btn-estorno');
+    if (estornoBtn) {
+      estornoBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var index = parseInt(this.dataset.idx, 10);
+        sysConfirm('Deseja estornar o pagamento desta parcela?', function() {
+          _parcelas[index].paid = false;
+          delete _parcelas[index].paymentMethod;
+          delete _parcelas[index].paymentDate;
+          
+          updatePagoStatusIfAllPaid();
+          updateReciboButtonVisibility();
+          renderInstallments();
+          showToast('Pagamento estornado com sucesso!', 'success');
+        });
+      });
+    }
+    
+    var valInp = col.querySelector('.val-input');
+    if (valInp) {
+      valInp.addEventListener('input', function() {
+        valInp.value = moneyMask(valInp.value);
+        _parcelas[idx].value = moneyUnmask(valInp.value);
+      });
+    }
+    
+    var dueInp = col.querySelector('.due-input');
+    if (dueInp) {
+      dueInp.addEventListener('change', function(e) {
+        _parcelas[idx].due = e.target.value;
+      });
+    }
+    
+    wrapper.appendChild(col);
+  });
+  
+  updatePagarButtonVisibility();
+}
+
+function updatePagarButtonVisibility() {
+  var btn = $id('btnPagarSelected');
+  if (!btn) return;
+  var hasUnpaid = _parcelas.some(function(p) { return !p.paid; });
+  if (hasUnpaid) {
+    btn.classList.remove('d-none');
+  } else {
+    btn.classList.add('d-none');
+  }
+}
+
+function updatePagoStatusIfAllPaid() {
+  var statusSel = $id('budgetStatus');
+  if (!statusSel) return;
+  
+  var allPaid = _parcelas.length > 0 && _parcelas.every(function(p) { return p.paid; });
+  if (allPaid && statusSel.value !== 'Pago') {
+    statusSel.value = 'Pago';
+    statusSel.dispatchEvent(new Event('change'));
+  } else if (!allPaid && statusSel.value === 'Pago') {
+    statusSel.value = 'Aprovado';
+    statusSel.dispatchEvent(new Event('change'));
+  }
+}
+
+function updateReciboButtonVisibility() {
+  var btn = $id('reciboButton');
+  if (!btn) return;
+  var status = getVal('budgetStatus');
+  var hasPaidInstallment = _parcelas.some(function(p) { return p.paid; });
+  
+  if (status === 'Pago' || hasPaidInstallment) {
+    btn.classList.remove('d-none');
+  } else {
+    btn.classList.add('d-none');
+  }
+}
+
 /* Formulario -> objeto */
 function getBudgetFromForm() {
   var items = [];
@@ -469,6 +632,8 @@ function getBudgetFromForm() {
     id: getVal('numeroOrcamento'), tipo: 'Orcamento',
     data: dataVal, issueISO: issueISO, dueISO: dueISO,
     clientName: getVal('clientName'), totalNumber: total,
+    status: getVal('budgetStatus'),
+    parcelas: _parcelas,
     client: {
       doc:          getVal('clientCNPJ'),   ie:    getVal('clientIE'),
       name:         getVal('clientName'),   phone1:getVal('clientPhone1'),
@@ -518,6 +683,10 @@ function loadBudgetIntoForm(b) {
   setVal('proposalValidity',  x.validade  || '');
   setVal('paymentConditions', x.pagamento || '');
   setVal('notes',             x.obs       || '');
+  
+  setVal('budgetStatus',      b.status    || 'Aberto');
+  $id('budgetStatus').dispatchEvent(new Event('change'));
+
   var items = b.items || [];
   buildRows(Math.max(items.length, 3));
   items.forEach(function(it, i) {
@@ -525,9 +694,18 @@ function loadBudgetIntoForm(b) {
     if (!tr) return;
     tr.querySelector('.row-desc').value  = it.descricao || it.description || '';
     tr.querySelector('.row-qtd').value   = it.qtd || 0;
-    tr.querySelector('.row-unit').value  = moneyMask(String(Math.round((it.unit || 0)*100)));
+    tr.querySelector('.row-unit').value  = moneyMask(String(Math.round((it.unit || it.unitario || 0)*100)));
     tr.querySelector('.row-total').value = currencyBR(it.total || 0);
   });
+  
+  _parcelas = b.parcelas || [];
+  if (_parcelas.length > 0) {
+    setVal('numInstallments', String(_parcelas.length));
+  } else {
+    setVal('numInstallments', '0');
+  }
+  renderInstallments();
+  updateReciboButtonVisibility();
   recalc();
 }
 
@@ -571,6 +749,14 @@ function resetForm() {
   $id('totalValue').innerText = currencyBR(0);
   setVal('numeroOrcamento', gerarNumeroDiario());
   setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
+  
+  setVal('budgetStatus', 'Aberto');
+  $id('budgetStatus').dispatchEvent(new Event('change'));
+  _parcelas = [];
+  setVal('numInstallments', '0');
+  renderInstallments();
+  updateReciboButtonVisibility();
+  
   recalc();
 }
 
@@ -580,6 +766,8 @@ function resetForm() {
 document.addEventListener('DOMContentLoaded', async function() {
   var user = await checkAuth();
   if (!user) return;
+
+  injectNavbar('cadastro');
 
   await BudgetDB.migrateFromLocalStorage();
 
@@ -761,6 +949,200 @@ document.addEventListener('DOMContentLoaded', async function() {
   $id('btnSalvar').addEventListener('click',     function() { saveBudget(); });
   $id('savePdfButton').addEventListener('click', function() { gerarPDF(getBudgetFromForm(), true); });
   $id('printButton').addEventListener('click',   function() { gerarPDF(getBudgetFromForm(), false); });
+
+  /* Status Select color control */
+  $id('budgetStatus').addEventListener('change', function() {
+    var st = this.value;
+    
+    var labelEl = $id('labelOrcamentoPedido');
+    if (labelEl) {
+      if (st === 'Aprovado' || st === 'Pago') {
+        labelEl.innerText = 'Pedido';
+      } else {
+        labelEl.innerText = 'Orçamento';
+      }
+    }
+    var itemsLabelEl = $id('labelItensOrcamentoPedido');
+    if (itemsLabelEl) {
+      if (st === 'Aprovado' || st === 'Pago') {
+        itemsLabelEl.innerText = 'Itens do Pedido';
+      } else {
+        itemsLabelEl.innerText = 'Itens do Orçamento';
+      }
+    }
+    var saveTextEl = $id('btnSalvarText');
+    if (saveTextEl) {
+      if (st === 'Aprovado' || st === 'Pago') {
+        saveTextEl.innerText = 'Salvar Pedido';
+      } else {
+        saveTextEl.innerText = 'Salvar';
+      }
+    }
+
+    var btn = $id('statusDropdownBtn');
+    var color = '';
+    var bg = '';
+    var iconHtml = '';
+    
+    if (st === 'Pago') {
+      color = '#16a34a';
+      bg = '#f0fdf4';
+      iconHtml = '<i class="fa-solid fa-credit-card"></i>';
+      _parcelas.forEach(function(p) {
+        if (!p.paid) {
+          p.paid = true;
+          p.paymentMethod = 'Pix';
+          p.paymentDate = todayISO();
+        }
+      });
+      renderInstallments();
+    } else if (st === 'Aprovado') {
+      color = '#2563eb';
+      bg = '#eff6ff';
+      iconHtml = '<i class="fa-solid fa-circle-check"></i>';
+    } else if (st === 'Recusado') {
+      color = '#dc2626';
+      bg = '#fef2f2';
+      iconHtml = '<i class="fa-solid fa-circle-xmark"></i>';
+    } else {
+      color = 'var(--brand-700)';
+      bg = 'var(--brand-50)';
+      iconHtml = '<i class="fa-regular fa-hourglass-half"></i>';
+    }
+    
+    if (btn) {
+      btn.innerHTML = '<span>' + iconHtml + ' ' + st + '</span> <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.7;"></i>';
+      btn.style.color = color;
+      btn.style.backgroundColor = bg;
+    }
+    
+    this.style.color = color;
+    this.style.backgroundColor = bg;
+    
+    updateReciboButtonVisibility();
+  });
+  $id('budgetStatus').dispatchEvent(new Event('change'));
+
+  // Registrar listeners para itens do dropdown customizado de status
+  document.querySelectorAll('#statusDropdownContainer .dropdown-item').forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var val = item.dataset.value;
+      var input = $id('budgetStatus');
+      if (input) {
+        input.value = val;
+        input.dispatchEvent(new Event('change'));
+      }
+    });
+  });
+
+  /* Gerador de parcelas click */
+  $id('btnGenInstallments').addEventListener('click', function() {
+    var N = parseInt(getVal('numInstallments'), 10);
+    if (!N) {
+      _parcelas = [];
+      renderInstallments();
+      updateReciboButtonVisibility();
+      return;
+    }
+    
+    var subtotal = 0;
+    $id('itemsTbody').querySelectorAll('tr').forEach(function(tr) {
+      var qtd  = parseFloat(tr.querySelector('.row-qtd').value) || 0;
+      var unit = moneyUnmask(tr.querySelector('.row-unit').value);
+      subtotal += qtd * unit;
+    });
+    var frete = moneyUnmask(getVal('frete'));
+    var desc  = moneyUnmask(getVal('desconto'));
+    var total = subtotal + frete - desc;
+    
+    var val = Math.floor(total / N * 100) / 100;
+    var lastVal = Math.round((total - (val * (N - 1))) * 100) / 100;
+    
+    _parcelas = [];
+    var baseDate = new Date();
+    for (var i = 1; i <= N; i++) {
+      var due = new Date(baseDate.getFullYear(), baseDate.getMonth() + (i - 1), baseDate.getDate());
+      var dueISO = due.toISOString().slice(0, 10);
+      var pVal = (i === N) ? lastVal : val;
+      
+      var isPaid = getVal('budgetStatus') === 'Pago';
+      _parcelas.push({
+        number: i,
+        value: pVal,
+        due: dueISO,
+        paid: isPaid,
+        paymentMethod: isPaid ? 'Pix' : undefined,
+        paymentDate: isPaid ? todayISO() : undefined
+      });
+    }
+    renderInstallments();
+    updateReciboButtonVisibility();
+  });
+
+  /* Botão Pagar Selecionadas */
+  $id('btnPagarSelected').addEventListener('click', function() {
+    var selectedCheckboxes = document.querySelectorAll('.select-to-pay:checked');
+    if (selectedCheckboxes.length === 0) {
+      showToast('Selecione pelo menos uma parcela para pagar.', 'info');
+      return;
+    }
+    
+    var listEl = $id('selectedInstallmentsList');
+    listEl.innerHTML = '';
+    var totalSum = 0;
+    
+    selectedCheckboxes.forEach(function(chk) {
+      var idx = parseInt(chk.dataset.idx, 10);
+      var p = _parcelas[idx];
+      totalSum += p.value;
+      
+      var li = document.createElement('li');
+      li.innerText = p.number + 'ª Parcela - ' + currencyBR(p.value) + ' (Vence em ' + fmtBR(p.due) + ')';
+      listEl.appendChild(li);
+    });
+    
+    $id('selectedInstallmentsTotal').innerText = currencyBR(totalSum);
+    $id('paymentDateInput').value = todayISO();
+    
+    var myModal = new bootstrap.Modal(document.getElementById('modalPagamento'));
+    myModal.show();
+  });
+
+  /* Confirmar Pagamento do Modal */
+  $id('btnConfirmarPagamento').addEventListener('click', function() {
+    var selectedCheckboxes = document.querySelectorAll('.select-to-pay:checked');
+    if (selectedCheckboxes.length === 0) {
+      return;
+    }
+    
+    var method = getVal('paymentMethodSelect');
+    var date = getVal('paymentDateInput') || todayISO();
+    
+    selectedCheckboxes.forEach(function(chk) {
+      var idx = parseInt(chk.dataset.idx, 10);
+      _parcelas[idx].paid = true;
+      _parcelas[idx].paymentMethod = method;
+      _parcelas[idx].paymentDate = date;
+    });
+    
+    updatePagoStatusIfAllPaid();
+    updateReciboButtonVisibility();
+    renderInstallments();
+    
+    var modalEl = document.getElementById('modalPagamento');
+    var modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) {
+      modalInstance.hide();
+    }
+    
+    showToast('Pagamento registrado com sucesso!', 'success');
+  });
+
+  /* Recibo Button PDF click */
+  $id('reciboButton').addEventListener('click', function() {
+    gerarReciboPDF(getBudgetFromForm(), true);
+  });
 
   /* Upload de Logo Customizada */
   var logoUploadInput = $id('logoUploadInput');
@@ -991,5 +1373,50 @@ function restaurarLogoPadrao() {
   });
 }
 </script>
+
+<!-- Modal Registrar Pagamento -->
+<div class="modal fade" id="modalPagamento" tabindex="-1" aria-labelledby="modalPagamentoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white py-2">
+        <h6 class="modal-title fw-bold" id="modalPagamentoLabel"><i class="fa-solid fa-credit-card"></i> Registrar Pagamento</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-success py-2 mb-3" style="font-size: .85rem;">
+          <div class="fw-bold">Parcelas Selecionadas:</div>
+          <ul id="selectedInstallmentsList" class="mb-0 ps-3 mt-1" style="font-size: .8rem;"></ul>
+          <hr class="my-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Total a Pagar:</span>
+            <span class="fw-bold fs-5 text-success" id="selectedInstallmentsTotal">R$ 0,00</span>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size: .82rem;">Forma de Pagamento</label>
+          <select id="paymentMethodSelect" class="form-select form-select-sm">
+            <option value="Pix">Pix</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Transferência Bancária">Transferência Bancária</option>
+            <option value="Boleto">Boleto</option>
+          </select>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold" style="font-size: .82rem;">Data do Pagamento</label>
+          <input type="date" id="paymentDateInput" class="form-control form-control-sm">
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-sm btn-success" id="btnConfirmarPagamento">Confirmar Pagamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
