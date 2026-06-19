@@ -1431,3 +1431,16 @@ function openPaymentRegistrationModal(budget, onSavedCallback) {
   myModal.show();
 }
 
+/* Registro de Service Worker para PWA */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js')
+      .then(function(reg) {
+        console.log('Service Worker registrado com sucesso:', reg.scope);
+      })
+      .catch(function(err) {
+        console.warn('Erro ao registrar o Service Worker:', err);
+      });
+  });
+}
+
