@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hidrog-space-v2';
+const CACHE_NAME = 'hidrog-space-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -41,6 +41,11 @@ self.addEventListener('activate', (e) => {
 
 // Fetch: estratégia Network First com fallback para Cache
 self.addEventListener('fetch', (e) => {
+  // Só intercepta e cacheia requisições HTTP e HTTPS (evita erro com extensões do Chrome)
+  if (!e.request.url.startsWith('http://') && !e.request.url.startsWith('https://')) {
+    return;
+  }
+
   // Ignora chamadas para o Supabase ou recursos externos que não queremos cachear no cache offline
   if (e.request.url.includes('supabase.co') || e.request.url.includes('cdnjs') || e.request.url.includes('jsdelivr')) {
     return;
