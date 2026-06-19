@@ -104,7 +104,7 @@
         </span>
         <span class="badge bg-primary text-white rounded-pill" id="badgeOrcamentosCount">0</span>
       </div>
-      <div class="table-responsive" id="divOrcamentosTable">
+      <div class="table-responsive dashboard-table-container" id="divOrcamentosTable">
         <table class="table mb-0" style="min-width: 850px;">
           <thead>
             <tr>
@@ -121,8 +121,7 @@
             <tr>
               <td colspan="7" class="text-center py-4">
                 <div class="water-loader">
-                  <div class="drop"></div>
-                  <div class="wave"></div>
+                  <div class="spinner"></div>
                   <div class="loader-text">Carregando orçamentos...</div>
                 </div>
               </td>
@@ -144,7 +143,7 @@
         </span>
         <span class="badge bg-success text-white rounded-pill" id="badgePedidosCount">0</span>
       </div>
-      <div class="table-responsive" id="divPedidosTable">
+      <div class="table-responsive dashboard-table-container" id="divPedidosTable">
         <table class="table mb-0" style="min-width: 850px;">
           <thead>
             <tr>
@@ -161,8 +160,7 @@
             <tr>
               <td colspan="7" class="text-center py-4">
                 <div class="water-loader">
-                  <div class="drop"></div>
-                  <div class="wave"></div>
+                  <div class="spinner"></div>
                   <div class="loader-text">Carregando pedidos...</div>
                 </div>
               </td>
@@ -543,9 +541,22 @@ function renderTable(resetPage) {
       var parcelasHtml = '';
       
       if (parcelas.length > 0) {
+        var today = todayISO();
         parcelas.forEach(function(p, idx) {
-          var badgeCls = p.paid ? 'bg-success-subtle text-success border-success-subtle' : 'bg-warning-subtle text-warning border-warning-subtle';
-          var badgeText = p.paid ? 'Pago' : 'Pendente';
+          var st = getInstallmentStatus(p, today);
+          var badgeCls = st.class;
+          var badgeText = st.text;
+          
+          var actionBtn = '';
+          if (!p.paid) {
+            if (st.text === 'Vencido') {
+              actionBtn = '<button type="button" class="badge rounded-pill badge-payment-vencido btn-badge-payment btn-report-protestar" data-id="' + o.id + '" data-idx="' + idx + '">Protestar</button>' +
+                          '<button type="button" class="badge rounded-pill badge-payment-pago btn-badge-payment btn-report-pagar" data-id="' + o.id + '" data-idx="' + idx + '">Pagar</button>';
+            } else {
+              actionBtn = '<button type="button" class="badge rounded-pill badge-payment-pago btn-badge-payment btn-report-pagar" data-id="' + o.id + '" data-idx="' + idx + '">Pagar</button>';
+            }
+          }
+          
           var details = '';
           if (p.paid) {
             var m = p.paymentMethod || 'Dinheiro';
@@ -556,11 +567,12 @@ function renderTable(resetPage) {
           }
           
           parcelasHtml += 
-            '<div class="d-inline-flex align-items-center gap-1 px-2 py-0.5 rounded border bg-white me-1 mb-1" style="font-size: .7rem; border-color: #e2e8f0 !important;">' +
-              '<span class="fw-bold text-secondary">' + (p.number || (idx + 1)) + 'ª Parcela</span>' +
-              '<span class="fw-semibold text-dark">' + currencyBR(p.value) + '</span>' +
-              '<span class="badge border rounded-pill py-0.5 px-1.5 ' + badgeCls + '" style="font-size: .6rem; scale: 0.95;">' + badgeText + '</span>' +
-              '<span class="text-muted" style="font-size: .65rem;">' + details + '</span>' +
+            '<div class="d-inline-flex align-items-center gap-0 px-2 py-0.5 rounded border bg-white me-1 mb-1" style="font-size: .7rem; border-color: #e2e8f0 !important;">' +
+              '<span class="fw-bold text-secondary me-1">' + (p.number || (idx + 1)) + 'ª Parcela</span>' +
+              '<span class="fw-semibold text-dark me-1">' + currencyBR(p.value) + '</span>' +
+              '<span class="badge border rounded-pill ' + badgeCls + '">' + badgeText + '</span>' +
+              actionBtn +
+              '<span class="text-muted ms-1" style="font-size: .65rem;">' + details + '</span>' +
             '</div>';
         });
       } else {
@@ -825,6 +837,40 @@ document.addEventListener('DOMContentLoaded', async function() {
       updateSortHeaders();
       renderTable();
     });
+  });
+
+  // Event Delegation para Protestar/Estornar no Relatório
+  document.addEventListener('click', async function(e) {
+    var btnProtestar = e.target.closest('.btn-report-protestar');
+    if (btnProtestar) {
+      e.preventDefault();
+      e.stopPropagation();
+      var id = btnProtestar.dataset.id;
+      var idx = parseInt(btnProtestar.dataset.idx, 10);
+      var budget = allBudgets.find(function(x) { return x.id === id; });
+      if (budget) {
+        budget.parcelas[idx].status = 'Protesto';
+        await BudgetDB.save(budget);
+        renderTable(false);
+        showToast('Parcela protestada com sucesso!', 'success');
+      }
+      return;
+    }
+
+    var btnPagar = e.target.closest('.btn-report-pagar');
+    if (btnPagar) {
+      e.preventDefault();
+      e.stopPropagation();
+      var id = btnPagar.dataset.id;
+      var idx = parseInt(btnPagar.dataset.idx, 10);
+      var budget = allBudgets.find(function(x) { return x.id === id; });
+      if (budget) {
+        openPaymentRegistrationModal(budget, function() {
+          renderTable(false);
+        }, idx);
+      }
+      return;
+    }
   });
 
   // Inicializa visualmente os ícones de ordenação

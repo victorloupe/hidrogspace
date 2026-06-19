@@ -20,14 +20,28 @@
     .empty-state i { font-size: 2.5rem; margin-bottom: 12px; opacity: .35; display:block; }
     /* Modal overlay — mesmo padrão do sysAlert/sysConfirm */
     #prodModal {
-      display: none; position: fixed; inset: 0; z-index: 9200;
-      background: rgba(15,23,42,.4); backdrop-filter: blur(4px);
-      align-items: center; justify-content: center; padding: 20px;
+      position: fixed; inset: 0; z-index: 9200;
+      background: rgba(15, 23, 42, 0); backdrop-filter: blur(0px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      visibility: hidden;
+      transition: background-color 0.25s ease, backdrop-filter 0.25s ease, visibility 0.25s ease;
+    }
+    #prodModal.show {
+      visibility: visible;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
     }
     #prodModalBox {
       background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
       padding: 24px; width: 100%; max-width: 400px;
+      opacity: 0;
+      transform: scale(0.92) translateY(10px);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+    }
+    #prodModal.show #prodModalBox {
+      opacity: 1;
+      transform: scale(1) translateY(0);
     }
     tr.editing td { background: #f0f9ff !important; }
     /* Paginação */
@@ -83,7 +97,7 @@
       </div>
 
       <!-- Tabela -->
-      <div>
+      <div class="table-responsive dashboard-table-container">
         <table class="table mb-0" style="table-layout:fixed; width:100%">
           <thead>
             <tr>
@@ -96,8 +110,7 @@
             <tr>
               <td colspan="3" class="text-center py-5">
                 <div class="water-loader">
-                  <div class="drop"></div>
-                  <div class="wave"></div>
+                  <div class="spinner"></div>
                   <div class="loader-text">Carregando produtos...</div>
                 </div>
               </td>
@@ -294,7 +307,7 @@ function openModal(prod) {
   document.getElementById('modalProdId').value    = isEdit ? prod.id    : '';
   document.getElementById('modalProdName').value  = isEdit ? prod.name  : '';
   document.getElementById('modalProdPrice').value = isEdit ? moneyMask(String(Math.round(prod.price * 100))) : 'R$ 0,00';
-  document.getElementById('prodModal').style.display = 'flex';
+  document.getElementById('prodModal').classList.add('show');
   setTimeout(function() { document.getElementById('modalProdName').focus(); }, 50);
 
   // Destaca a linha sendo editada
@@ -306,7 +319,7 @@ function openModal(prod) {
 }
 
 function closeModal() {
-  document.getElementById('prodModal').style.display = 'none';
+  document.getElementById('prodModal').classList.remove('show');
   document.querySelectorAll('tr.editing').forEach(function(r) { r.classList.remove('editing'); });
 }
 

@@ -42,7 +42,7 @@
     <div class="col-12 col-md-4 d-flex flex-column gap-2" id="kpiRow">
       <a href="relatorio.html?filter=ok" class="text-decoration-none text-reset">
         <div class="kpi-card py-2 px-3">
-          <div class="kpi-icon" style="background:#eff6ff;color:#3b82f6"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+          <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="fa-solid fa-file-invoice-dollar"></i></div>
           <div>
             <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Orçamentos Abertos</div>
             <div class="fw-bold" style="font-size:1rem; line-height:1.2" id="kpiOrcAbertos">—</div>
@@ -147,7 +147,7 @@
             </div>
             <span class="badge bg-warning text-dark" id="countSoon">0</span>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive dashboard-table-container">
             <table class="table mb-0" style="font-size: .78rem;">
               <thead>
                 <tr>
@@ -160,6 +160,13 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          <!-- Barra de Paginação -->
+          <div class="px-3 py-2 border-top no-print d-flex align-items-center justify-content-between" style="font-size: .78rem; background: #fafafa; border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius);">
+            <span class="text-muted" id="soonInfo">Exibindo 0-0 de 0</span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0" id="soonPages"></ul>
+            </nav>
           </div>
         </div>
       </div>
@@ -176,7 +183,7 @@
             </div>
             <span class="badge bg-success" id="countPedidos">0</span>
           </div>
-          <div class="table-responsive">
+          <div class="table-responsive dashboard-table-container">
             <table class="table mb-0" style="font-size: .78rem;">
               <thead>
                 <tr>
@@ -189,6 +196,13 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          <!-- Barra de Paginação -->
+          <div class="px-3 py-2 border-top no-print d-flex align-items-center justify-content-between" style="font-size: .78rem; background: #fafafa; border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius);">
+            <span class="text-muted" id="pedidosInfo">Exibindo 0-0 de 0</span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0" id="pedidosPages"></ul>
+            </nav>
           </div>
         </div>
       </div>
@@ -214,6 +228,10 @@ function makeBadge(st, status) {
 
 var allBudgetsForChart = null;
 var myChart = null;
+var _allBudgetsGlobal = [];
+var PAGE_SIZE_DASH = 4;
+var pageSoon = 1;
+var pagePedidos = 1;
 
 function renderChart(budgets) {
   var canvas = document.getElementById('salesChart');
@@ -234,10 +252,11 @@ function renderChart(budgets) {
     var key = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
     labels.push(label);
     keys.push(key);
-    monthlyData[key] = { pedidos: 0, orcamentos: 0 };
+    monthlyData[key] = { orcAbertos: 0, orcAlerta: 0, pedAprovados: 0, pedPagos: 0 };
   }
   
-  // Preencher com faturamento real e orçamentos em aberto
+  // Preencher com faturamento real e orçamentos
+  var todayISOStr = todayISO();
   budgets.forEach(function(b) {
     var dateStr = b.issueISO || parseBRDateToISO(b.data);
     if (dateStr && dateStr.length >= 7) {
@@ -245,21 +264,36 @@ function renderChart(budgets) {
       if (monthlyData[key] !== undefined) {
         var total = b.totalNumber != null ? b.totalNumber : ((b.valores && b.valores.total) || 0);
         var status = b.status || (b.extras && b.extras.status) || 'Aberto';
-        if (status === 'Aprovado' || status === 'Pago') {
-          monthlyData[key].pedidos += total;
-        } else {
-          monthlyData[key].orcamentos += total;
+        
+        if (status === 'Aberto') {
+          var due = b.dueISO || parseValidityToISO(b.extras && b.extras.validade, b.data);
+          var dleft = due ? diffDays(due, todayISOStr) : NaN;
+          var st = statusInfoByDleft(dleft);
+          if (st.key === 'expired') {
+            monthlyData[key].orcAlerta += total;
+          } else if (st.key === 'soon' || st.key === 'today') {
+            monthlyData[key].orcAlerta += total;
+            monthlyData[key].orcAbertos += total;
+          } else {
+            monthlyData[key].orcAbertos += total;
+          }
+        } else if (status === 'Aprovado') {
+          monthlyData[key].pedAprovados += total;
+        } else if (status === 'Pago') {
+          monthlyData[key].pedPagos += total;
         }
       }
     }
   });
   
-  var datasetPedidos = keys.map(function(key) { return monthlyData[key].pedidos; });
-  var datasetOrcamentos = keys.map(function(key) { return monthlyData[key].orcamentos; });
+  var datasetOrcAbertos = keys.map(function(key) { return monthlyData[key].orcAbertos; });
+  var datasetOrcAlerta = keys.map(function(key) { return monthlyData[key].orcAlerta; });
+  var datasetPedAprovados = keys.map(function(key) { return monthlyData[key].pedAprovados; });
+  var datasetPedPagos = keys.map(function(key) { return monthlyData[key].pedPagos; });
   
   var textColor = '#64748b';
   var gridColor = '#e2e8f0';
-
+ 
   if (myChart) {
     myChart.destroy();
   }
@@ -270,22 +304,44 @@ function renderChart(budgets) {
       labels: labels,
       datasets: [
         {
-          label: 'Pedidos (Aprovados/Pagos)',
-          data: datasetPedidos,
+          label: 'Orçamentos Abertos',
+          data: datasetOrcAbertos,
+          backgroundColor: 'rgba(217, 119, 6, 0.85)',
+          borderColor: 'rgb(217, 119, 6)',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.8,
+          categoryPercentage: 0.8
+        },
+        {
+          label: 'Orçamentos c/ Alerta',
+          data: datasetOrcAlerta,
+          backgroundColor: 'rgba(239, 68, 68, 0.85)',
+          borderColor: 'rgb(239, 68, 68)',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.8,
+          categoryPercentage: 0.8
+        },
+        {
+          label: 'Pedidos Aprovados',
+          data: datasetPedAprovados,
+          backgroundColor: 'rgba(2, 132, 199, 0.85)',
+          borderColor: 'rgb(2, 132, 199)',
+          borderWidth: 1,
+          borderRadius: 4,
+          barPercentage: 0.8,
+          categoryPercentage: 0.8
+        },
+        {
+          label: 'Pedidos Pagos',
+          data: datasetPedPagos,
           backgroundColor: 'rgba(16, 185, 129, 0.85)',
           borderColor: 'rgb(16, 185, 129)',
           borderWidth: 1,
-          borderRadius: 6,
-          barPercentage: 0.6
-        },
-        {
-          label: 'Orçamentos (Em Aberto)',
-          data: datasetOrcamentos,
-          backgroundColor: 'rgba(14, 165, 233, 0.5)',
-          borderColor: 'rgb(14, 165, 233)',
-          borderWidth: 1,
-          borderRadius: 6,
-          barPercentage: 0.6
+          borderRadius: 4,
+          barPercentage: 0.8,
+          categoryPercentage: 0.8
         }
       ]
     },
@@ -293,11 +349,19 @@ function renderChart(budgets) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            font: { family: 'Segoe UI, system-ui, sans-serif', size: 9 },
+            boxWidth: 10,
+            padding: 8
+          }
+        },
         tooltip: {
           callbacks: {
             label: function(context) {
-              return ' ' + currencyBR(context.raw);
+              return ' ' + context.dataset.label + ': ' + currencyBR(context.raw);
             }
           }
         }
@@ -326,6 +390,7 @@ async function renderPage() {
   var startTime = Date.now();
   var today = todayISO();
   var all = (await BudgetDB.getAll()).filter(Boolean);
+  _allBudgetsGlobal = all;
   allBudgetsForChart = all;
 
   // Garante que o efeito completo da gota (1.8s) seja finalizado antes de renderizar
@@ -353,9 +418,15 @@ async function renderPage() {
 
     var status = o.status || (o.extras && o.extras.status) || 'Aberto';
     if (status === 'Aberto') {
-      if (st.key === 'expired' || st.key === 'soon' || st.key === 'today') {
+      if (st.key === 'expired') {
         kpi.orcAlerta.count++;
         kpi.orcAlerta.val += totalVal;
+      } else if (st.key === 'soon' || st.key === 'today') {
+        kpi.orcAlerta.count++;
+        kpi.orcAlerta.val += totalVal;
+        
+        kpi.orcAbertos.count++;
+        kpi.orcAbertos.val += totalVal;
       } else {
         kpi.orcAbertos.count++;
         kpi.orcAbertos.val += totalVal;
@@ -381,8 +452,14 @@ async function renderPage() {
   document.getElementById('kpiPedPagos').textContent      = kpi.pedPagos.count + (kpi.pedPagos.count === 1 ? ' pedido' : ' pedidos');
   document.getElementById('kpiPedPagosVal').textContent   = currencyBR(kpi.pedPagos.val);
 
+  renderTables();
+}
+
+function renderTables() {
+  var today = todayISO();
+  
   // 1. Tabela de Orçamentos (Em Negociação / Alertas)
-  var listOrcamentos = all.map(function(o) {
+  var fullOrcamentos = _allBudgetsGlobal.map(function(o) {
     var issue = o.issueISO || parseBRDateToISO(o.data);
     var due   = o.dueISO   || parseValidityToISO(o.extras && o.extras.validade, o.data);
     var dleft = due ? diffDays(due, today) : NaN;
@@ -392,14 +469,16 @@ async function renderPage() {
     return status === 'Aberto' && Number.isFinite(x.dleft) && x.dleft <= 10;
   }).sort(function(a,b) { return (a.due||'').localeCompare(b.due||''); });
 
-  document.getElementById('countSoon').textContent = listOrcamentos.length;
+  document.getElementById('countSoon').textContent = fullOrcamentos.length;
+  
+  var slicedSoon = fullOrcamentos.slice((pageSoon - 1) * PAGE_SIZE_DASH, pageSoon * PAGE_SIZE_DASH);
   var tbodySoon = document.getElementById('tbodySoon');
   tbodySoon.innerHTML = '';
 
-  if (!listOrcamentos.length) {
+  if (!slicedSoon.length) {
     tbodySoon.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhum orçamento em alerta nos próximos dias.</td></tr>';
   } else {
-    listOrcamentos.forEach(function(qo) {
+    slicedSoon.forEach(function(qo) {
       var st = statusInfoByDleft(qo.dleft);
       var total = qo.totalNumber != null ? qo.totalNumber : ((qo.valores && qo.valores.total)||0);
       var tr = document.createElement('tr');
@@ -419,22 +498,24 @@ async function renderPage() {
   }
 
   // 2. Tabela de Pedidos Recentes
-  var listPedidos = all.map(function(o) {
+  var fullPedidos = _allBudgetsGlobal.map(function(o) {
     var issue = o.issueISO || parseBRDateToISO(o.data);
     return Object.assign({}, o, {issue:issue});
   }).filter(function(x) {
     var status = x.status || (x.extras && x.extras.status) || 'Aberto';
     return status === 'Aprovado' || status === 'Pago';
-  }).sort(function(a,b) { return (b.issue||'').localeCompare(a.issue||''); }).slice(0, 10);
+  }).sort(function(a,b) { return (b.issue||'').localeCompare(a.issue||''); });
 
-  document.getElementById('countPedidos').textContent = listPedidos.length;
+  document.getElementById('countPedidos').textContent = fullPedidos.length;
+
+  var slicedPedidos = fullPedidos.slice((pagePedidos - 1) * PAGE_SIZE_DASH, pagePedidos * PAGE_SIZE_DASH);
   var tbodyPedidos = document.getElementById('tbodyPedidos');
   tbodyPedidos.innerHTML = '';
 
-  if (!listPedidos.length) {
+  if (!slicedPedidos.length) {
     tbodyPedidos.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Nenhum pedido aprovado ou pago encontrado.</td></tr>';
   } else {
-    listPedidos.forEach(function(qo) {
+    slicedPedidos.forEach(function(qo) {
       var total = qo.totalNumber != null ? qo.totalNumber : ((qo.valores && qo.valores.total)||0);
       var tr = document.createElement('tr');
       tr.innerHTML =
@@ -457,7 +538,7 @@ async function renderPage() {
   tbodySoon.querySelectorAll('.btn-print').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = btn.dataset.id;
-      var budget = listOrcamentos.find(function(item) { return item.id === id; });
+      var budget = fullOrcamentos.find(function(item) { return item.id === id; });
       if (budget) {
         gerarPDF(budget, false);
       }
@@ -468,7 +549,7 @@ async function renderPage() {
   tbodyPedidos.querySelectorAll('.btn-print').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = btn.dataset.id;
-      var budget = listPedidos.find(function(item) { return item.id === id; });
+      var budget = fullPedidos.find(function(item) { return item.id === id; });
       if (budget) {
         gerarPDF(budget, false);
       }
@@ -478,11 +559,70 @@ async function renderPage() {
   tbodyPedidos.querySelectorAll('.btn-pay-modal').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = btn.dataset.id;
-      var budget = listPedidos.find(function(item) { return item.id === id; });
+      var budget = fullPedidos.find(function(item) { return item.id === id; });
       if (budget) {
         openPaymentRegistrationModal(budget, function() {
           renderPage();
         });
+      }
+    });
+  });
+
+  // Renderizar paginação
+  renderDashPaginationBar(fullOrcamentos.length, pageSoon, 'soonPages', 'soonInfo', function(pg) {
+    pageSoon = pg;
+    renderTables();
+  });
+
+  renderDashPaginationBar(fullPedidos.length, pagePedidos, 'pedidosPages', 'pedidosInfo', function(pg) {
+    pagePedidos = pg;
+    renderTables();
+  });
+}
+
+function renderDashPaginationBar(totalItems, currentPage, containerPagesId, containerInfoId, onPageChange) {
+  var pagesUl = document.getElementById(containerPagesId);
+  var infoSpan = document.getElementById(containerInfoId);
+  if (!pagesUl || !infoSpan) return;
+
+  if (totalItems === 0) {
+    infoSpan.textContent = 'Exibindo 0-0 de 0';
+    pagesUl.innerHTML = '';
+    return;
+  }
+
+  var totalPages = Math.ceil(totalItems / PAGE_SIZE_DASH);
+  var start = (currentPage - 1) * PAGE_SIZE_DASH + 1;
+  var end = Math.min(currentPage * PAGE_SIZE_DASH, totalItems);
+  infoSpan.textContent = 'Exibindo ' + start + '-' + end + ' de ' + totalItems;
+
+  if (totalPages <= 1) {
+    pagesUl.innerHTML = '';
+    return;
+  }
+
+  var li = '';
+  li += '<li class="page-item' + (currentPage === 1 ? ' disabled' : '') + '">' +
+        '<button class="page-link" data-pg="' + (currentPage - 1) + '"><i class="fa-solid fa-chevron-left"></i></button>' +
+        '</li>';
+
+  for (var i = 1; i <= totalPages; i++) {
+    li += '<li class="page-item' + (i === currentPage ? ' active' : '') + '">' +
+          '<button class="page-link" data-pg="' + i + '">' + i + '</button>' +
+          '</li>';
+  }
+
+  li += '<li class="page-item' + (currentPage === totalPages ? ' disabled' : '') + '">' +
+        '<button class="page-link" data-pg="' + (currentPage + 1) + '"><i class="fa-solid fa-chevron-right"></i></button>' +
+        '</li>';
+
+  pagesUl.innerHTML = li;
+
+  pagesUl.querySelectorAll('button.page-link').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var pg = parseInt(btn.dataset.pg, 10);
+      if (pg >= 1 && pg <= totalPages) {
+        onPageChange(pg);
       }
     });
   });

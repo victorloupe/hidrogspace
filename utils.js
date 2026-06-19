@@ -190,6 +190,29 @@ function statusInfoByDleft(dleft) {
   return {label:'Aberto', cls:'status-ok', key:'open'};
 }
 
+function getInstallmentStatus(p, today) {
+  today = today || todayISO();
+  if (p.paid) {
+    return { text: 'Pago', class: 'badge-payment-pago' };
+  }
+  
+  if (p.status === 'Protesto') {
+    return { text: 'Protesto', class: 'badge-payment-protesto' };
+  }
+  
+  if (p.due < today) {
+    return { text: 'Vencido', class: 'badge-payment-vencido' };
+  }
+  
+  var todayYearMonth = today.substring(0, 7);
+  var dueYearMonth = (p.due || '').substring(0, 7);
+  if (dueYearMonth === todayYearMonth) {
+    return { text: 'A vencer', class: 'badge-payment-avencer' };
+  }
+  
+  return { text: 'Pendente', class: 'badge-payment-pendente' };
+}
+
 /* Rede */
 async function fetchJSON(url, ms) {
   ms = ms || 8000;
@@ -238,29 +261,11 @@ async function logout() {
 /* ── Avisos e Confirmações do Sistema (Customizados) ────────────────── */
 function sysAlert(message, callback) {
   var overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100vw';
-  overlay.style.height = '100vh';
-  overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
-  overlay.style.backdropFilter = 'blur(4px)';
+  overlay.className = 'custom-modal';
   overlay.style.zIndex = '9999';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.padding = '20px';
 
   var box = document.createElement('div');
-  box.className = 'sys-dialog-box';
-  box.style.background = 'var(--card)';
-  box.style.borderRadius = '16px';
-  box.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05)';
-  box.style.border = '1px solid var(--border)';
-  box.style.padding = '24px';
-  box.style.width = '100%';
-  box.style.maxWidth = '380px';
-  box.style.textAlign = 'center';
+  box.className = 'custom-modal-box';
 
   box.innerHTML = `
     <div style="width: 48px; height: 48px; background: #f0f9ff; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.25rem;">
@@ -274,39 +279,28 @@ function sysAlert(message, callback) {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
+  // Trigger reflow & show transition
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+
   var okBtn = document.getElementById('sysAlertOkBtn');
   okBtn.focus();
   okBtn.addEventListener('click', function() {
-    overlay.remove();
-    if (callback) callback();
+    overlay.classList.remove('show');
+    setTimeout(function() {
+      overlay.remove();
+      if (callback) callback();
+    }, 250);
   });
 }
 
 function sysConfirm(message, onConfirm, onCancel) {
   var overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100vw';
-  overlay.style.height = '100vh';
-  overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
-  overlay.style.backdropFilter = 'blur(4px)';
+  overlay.className = 'custom-modal';
   overlay.style.zIndex = '9999';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.padding = '20px';
 
   var box = document.createElement('div');
-  box.className = 'sys-dialog-box';
-  box.style.background = 'var(--card)';
-  box.style.borderRadius = '16px';
-  box.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05)';
-  box.style.border = '1px solid var(--border)';
-  box.style.padding = '24px';
-  box.style.width = '100%';
-  box.style.maxWidth = '380px';
-  box.style.textAlign = 'center';
+  box.className = 'custom-modal-box';
 
   box.innerHTML = `
     <div style="width: 48px; height: 48px; background: #fffbeb; color: #d97706; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.25rem;">
@@ -323,14 +317,24 @@ function sysConfirm(message, onConfirm, onCancel) {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
+  // Trigger reflow & show transition
+  overlay.offsetHeight;
+  overlay.classList.add('show');
+
   document.getElementById('sysConfirmOkBtn').addEventListener('click', function() {
-    overlay.remove();
-    if (onConfirm) onConfirm();
+    overlay.classList.remove('show');
+    setTimeout(function() {
+      overlay.remove();
+      if (onConfirm) onConfirm();
+    }, 250);
   });
 
   document.getElementById('sysConfirmCancelBtn').addEventListener('click', function() {
-    overlay.remove();
-    if (onCancel) onCancel();
+    overlay.classList.remove('show');
+    setTimeout(function() {
+      overlay.remove();
+      if (onCancel) onCancel();
+    }, 250);
   });
 }
 
@@ -1208,7 +1212,7 @@ function exportToCSV(headers, rows, filename) {
   document.body.removeChild(a);
 }
 
-function openPaymentRegistrationModal(budget, onSavedCallback) {
+function openPaymentRegistrationModal(budget, onSavedCallback, preSelectIdx) {
   var modalId = 'globalPaymentModal';
   var modalEl = document.getElementById(modalId);
   if (!modalEl) {
@@ -1298,6 +1302,7 @@ function openPaymentRegistrationModal(budget, onSavedCallback) {
       return;
     }
     
+    var today = todayISO();
     parcelas.forEach(function(p, idx) {
       var col = document.createElement('div');
       col.className = 'col-12 col-md-4 mb-2';
@@ -1306,8 +1311,10 @@ function openPaymentRegistrationModal(budget, onSavedCallback) {
       var selectHtml = '';
       var detailsHtml = '';
       
+      var st = getInstallmentStatus(p, today);
+      
       if (p.paid) {
-        badgeHtml = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-1 px-2" style="font-size:.7rem"><i class="fa-solid fa-circle-check"></i> Pago</span>`;
+        badgeHtml = `<span class="badge ${st.class} rounded-pill"><i class="fa-solid fa-circle-check"></i> Pago</span>`;
         var methodStr = p.paymentMethod || 'Não informada';
         var dateStr = p.paymentDate ? fmtBR(p.paymentDate) : 'Não informada';
         detailsHtml = `<div class="text-success fw-semibold mt-1" style="font-size: .7rem; line-height: 1.1;">
@@ -1315,10 +1322,23 @@ function openPaymentRegistrationModal(budget, onSavedCallback) {
                        </div>`;
         selectHtml = `<a href="#" class="btn-gpay-estorno text-danger text-decoration-none fw-bold" style="font-size: .7rem;" data-idx="${idx}"><i class="fa-solid fa-undo"></i> Estornar</a>`;
       } else {
-        badgeHtml = `<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill py-1 px-2" style="font-size:.7rem">Pendente</span>`;
+        var actionBtn = '';
+        if (st.text === 'Vencido') {
+          actionBtn = `<button type="button" class="badge badge-payment-vencido rounded-pill btn-badge-payment btn-gpay-protestar" data-idx="${idx}">Protestar</button>`;
+        } else if (st.text === 'Protesto') {
+          actionBtn = `<button type="button" class="badge badge-payment-estorno rounded-pill btn-badge-payment btn-gpay-cancelar-protesto" data-idx="${idx}"><i class="fa-solid fa-undo me-1"></i> Estornar</button>`;
+        }
+
+        badgeHtml = `
+          <div class="d-flex align-items-center gap-0">
+            <span class="badge ${st.class} rounded-pill">${st.text}</span>
+            ${actionBtn}
+          </div>
+        `;
+        var isChecked = (preSelectIdx !== undefined && idx === preSelectIdx) ? 'checked' : '';
         selectHtml = `
           <div class="form-check mb-0">
-            <input class="form-check-input gpay-select-to-pay" type="checkbox" id="gsel_${idx}" data-idx="${idx}">
+            <input class="form-check-input gpay-select-to-pay" type="checkbox" id="gsel_${idx}" data-idx="${idx}" ${isChecked}>
             <label class="form-check-label fw-semibold text-muted" for="gsel_${idx}" style="font-size: .75rem; cursor: pointer;">Selecionar</label>
           </div>
         `;
@@ -1335,6 +1355,7 @@ function openPaymentRegistrationModal(budget, onSavedCallback) {
             <span class="text-muted" style="font-size: .75rem;">Venc. ${fmtBR(p.due)}</span>
           </div>
           <div class="d-flex align-items-center justify-content-between">
+            <span class="text-muted fw-semibold" style="font-size: .7rem;">Status:</span>
             ${badgeHtml}
           </div>
           ${detailsHtml}
@@ -1367,6 +1388,31 @@ function openPaymentRegistrationModal(budget, onSavedCallback) {
             if (onSavedCallback) onSavedCallback(budget);
             showToast('Pagamento estornado com sucesso!', 'success');
           });
+        });
+      }
+
+      var gpayProtestarBtn = col.querySelector('.btn-gpay-protestar');
+      if (gpayProtestarBtn) {
+        gpayProtestarBtn.addEventListener('click', async function() {
+          var index = parseInt(this.dataset.idx, 10);
+          budget.parcelas[index].status = 'Protesto';
+          await BudgetDB.save(budget);
+          renderGInstallments();
+          if (onSavedCallback) onSavedCallback(budget);
+          showToast('Parcela protestada com sucesso!', 'success');
+        });
+      }
+
+      var gpayCancelProtestoBtn = col.querySelector('.btn-gpay-cancelar-protesto');
+      if (gpayCancelProtestoBtn) {
+        gpayCancelProtestoBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          var index = parseInt(this.dataset.idx, 10);
+          delete budget.parcelas[index].status;
+          await BudgetDB.save(budget);
+          renderGInstallments();
+          if (onSavedCallback) onSavedCallback(budget);
+          showToast('Protesto cancelado com sucesso!', 'success');
         });
       }
       

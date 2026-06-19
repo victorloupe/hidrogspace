@@ -231,8 +231,8 @@
 <div id="prodDropdown"></div>
 
 <!-- Modal: Adicionar produto ao catálogo -->
-<div id="modalAddProduct" style="display:none; position:fixed; inset:0; z-index:9200; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px;">
-  <div style="background:#fff; border-radius:16px; box-shadow:0 20px 40px rgba(0,0,0,.15); padding:24px; width:100%; max-width:380px;">
+<div id="modalAddProduct" class="custom-modal">
+  <div class="custom-modal-box text-start">
     <h6 style="font-weight:700; margin-bottom:16px; color:#0f172a;">
       <i class="fa-solid fa-box-open" style="color:#0ea5e9; margin-right:6px;"></i>Novo Produto
     </h6>
@@ -513,6 +513,7 @@ function renderInstallments() {
     return;
   }
   
+  var today = todayISO();
   _parcelas.forEach(function(p, idx) {
     var col = document.createElement('div');
     col.className = 'col-12 col-sm-6 col-md-4 col-lg-3';
@@ -521,16 +522,33 @@ function renderInstallments() {
     var selectHtml = '';
     var detailsHtml = '';
     
+    var st = getInstallmentStatus(p, today);
+    
     if (p.paid) {
-      badgeHtml = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-1 px-2" style="font-size:.7rem"><i class="fa-solid fa-circle-check"></i> Pago</span>`;
+      badgeHtml = `<span class="badge ${st.class} rounded-pill"><i class="fa-solid fa-circle-check"></i> Pago</span>`;
       var methodStr = p.paymentMethod || 'Não informada';
       var dateStr = p.paymentDate ? fmtBR(p.paymentDate) : 'Não informada';
       detailsHtml = `<div class="text-success fw-semibold mt-1" style="font-size: .7rem; line-height: 1.1;">
                        <i class="fa-solid fa-receipt"></i> ${methodStr} em ${dateStr}
                      </div>`;
-      selectHtml = `<a href="#" class="btn-estorno text-danger text-decoration-none fw-bold" style="font-size: .7rem;" data-idx="${idx}"><i class="fa-solid fa-undo"></i> Estornar</a>`;
+      selectHtml = '';
     } else {
-      badgeHtml = `<span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill py-1 px-2" style="font-size:.7rem">Pendente</span>`;
+      var actionBtn = '';
+      if (st.text === 'Vencido') {
+        actionBtn = `
+          <button type="button" class="badge badge-payment-vencido rounded-pill btn-badge-payment btn-protestar" data-idx="${idx}">Protestar</button>
+          <button type="button" class="badge badge-payment-pago rounded-pill btn-badge-payment btn-pagar-parcela" data-idx="${idx}">Pagar</button>
+        `;
+      } else {
+        actionBtn = `<button type="button" class="badge badge-payment-pago rounded-pill btn-badge-payment btn-pagar-parcela" data-idx="${idx}">Pagar</button>`;
+      }
+      
+      badgeHtml = `
+        <div class="d-flex align-items-center gap-0">
+          <span class="badge ${st.class} rounded-pill">${st.text}</span>
+          ${actionBtn}
+        </div>
+      `;
       selectHtml = `
         <div class="form-check mb-0">
           <input class="form-check-input select-to-pay" type="checkbox" id="sel_${idx}" data-idx="${idx}">
@@ -550,29 +568,12 @@ function renderInstallments() {
           <input type="date" class="form-control form-control-sm due-input" value="${p.due}" style="font-size: .78rem;" ${p.paid ? 'disabled' : ''}>
         </div>
         <div class="d-flex align-items-center justify-content-between">
+          <span class="text-muted fw-semibold" style="font-size: .7rem;">Status:</span>
           ${badgeHtml}
         </div>
         ${detailsHtml}
       </div>
     `;
-    
-    var estornoBtn = col.querySelector('.btn-estorno');
-    if (estornoBtn) {
-      estornoBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        var index = parseInt(this.dataset.idx, 10);
-        sysConfirm('Deseja estornar o pagamento desta parcela?', function() {
-          _parcelas[index].paid = false;
-          delete _parcelas[index].paymentMethod;
-          delete _parcelas[index].paymentDate;
-          
-          updatePagoStatusIfAllPaid();
-          updateReciboButtonVisibility();
-          renderInstallments();
-          showToast('Pagamento estornado com sucesso!', 'success');
-        });
-      });
-    }
     
     var valInp = col.querySelector('.val-input');
     if (valInp) {
@@ -586,6 +587,33 @@ function renderInstallments() {
     if (dueInp) {
       dueInp.addEventListener('change', function(e) {
         _parcelas[idx].due = e.target.value;
+        // Rerenderizar para recalcular status automático (A vencer vs Vencido) se a data mudar!
+        renderInstallments();
+      });
+    }
+
+    var btnProtestar = col.querySelector('.btn-protestar');
+    if (btnProtestar) {
+      btnProtestar.addEventListener('click', function() {
+        _parcelas[idx].status = 'Protesto';
+        renderInstallments();
+      });
+    }
+
+    var btnPagar = col.querySelector('.btn-pagar-parcela');
+    if (btnPagar) {
+      btnPagar.addEventListener('click', function() {
+        document.querySelectorAll('.select-to-pay').forEach(function(chk) {
+          chk.checked = false;
+        });
+        var chk = col.querySelector('.select-to-pay');
+        if (chk) {
+          chk.checked = true;
+        }
+        var btnPagarSelected = $id('btnPagarSelected');
+        if (btnPagarSelected) {
+          btnPagarSelected.click();
+        }
       });
     }
     
@@ -1257,12 +1285,12 @@ function showProdDropdown(input, tr) {
   dd.style.left  = rect.left + 'px';
   dd.style.top   = (rect.bottom + 2) + 'px';
   dd.style.width = Math.max(rect.width, 260) + 'px';
-  dd.style.display = 'block';
+  dd.classList.add('show');
 }
 
 function hideProdDropdown() {
   var dd = $id('prodDropdown');
-  if (dd) dd.style.display = 'none';
+  if (dd) dd.classList.remove('show');
   _prodActiveIdx = -1;
 }
 
@@ -1275,7 +1303,7 @@ function selectProd(p, tr) {
 
 function handleProdKey(e, tr) {
   var dd = $id('prodDropdown');
-  if (!dd || dd.style.display === 'none') return;
+  if (!dd || !dd.classList.contains('show')) return;
   var items = dd.querySelectorAll('.prod-item');
   if (!items.length) return;
   if (e.key === 'ArrowDown') {
@@ -1298,7 +1326,7 @@ function openProdModal(name, tr) {
   _pendingProdTr = tr;
   $id('prodModalName').value  = name || '';
   $id('prodModalPrice').value = 'R$ 0,00';
-  $id('modalAddProduct').style.display = 'flex';
+  $id('modalAddProduct').classList.add('show');
   setTimeout(function() { $id('prodModalPrice').focus(); $id('prodModalPrice').select(); }, 50);
 }
 
@@ -1312,7 +1340,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   $id('prodModalCancel').addEventListener('click', function() {
-    $id('modalAddProduct').style.display = 'none';
+    $id('modalAddProduct').classList.remove('show');
     _pendingProdTr = null;
   });
 
@@ -1332,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', function() {
       _products.sort(function(a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
 
       if (_pendingProdTr) selectProd(newProd, _pendingProdTr);
-      $id('modalAddProduct').style.display = 'none';
+      $id('modalAddProduct').classList.remove('show');
       _pendingProdTr = null;
       showToast('Produto "' + name + '" salvo!', 'success');
     } catch(err) {
@@ -1345,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Fechar modal ao clicar fora
   $id('modalAddProduct').addEventListener('click', function(e) {
-    if (e.target === this) { this.style.display = 'none'; _pendingProdTr = null; }
+    if (e.target === this) { this.classList.remove('show'); _pendingProdTr = null; }
   });
 });
 

@@ -84,12 +84,12 @@ body {
   background: linear-gradient(135deg, var(--brand), var(--brand-600));
   border: none; color: #fff; font-weight: 600;
   box-shadow: 0 2px 4px rgba(14,165,233,.35);
-  transition: all .15s;
+  transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-brand:hover, .btn-brand:focus {
   background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
   color: #fff; box-shadow: 0 4px 8px rgba(14,165,233,.4);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 /* ── Cards ──────────────────────────────────────────────── */
@@ -98,9 +98,12 @@ body {
   border: 1px solid var(--border) !important;
   border-radius: var(--radius) !important;
   box-shadow: var(--shadow);
-  transition: box-shadow .15s;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.card:hover { box-shadow: var(--shadow-md); }
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), 0 10px 20px -5px rgba(0,0,0,0.06);
+}
 
 /* ── KPI cards ──────────────────────────────────────────── */
 .kpi-card {
@@ -110,9 +113,12 @@ body {
   box-shadow: var(--shadow);
   padding: 16px 18px;
   display: flex; align-items: center; gap: 12px;
-  transition: box-shadow .15s;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.kpi-card:hover { box-shadow: var(--shadow-md); }
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), 0 10px 20px -5px rgba(0,0,0,0.06);
+}
 .kpi-icon {
   width: 44px; height: 44px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
@@ -151,7 +157,7 @@ body {
 .status-today         { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 .badge-status.soon,
 .status-soon          { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd;
-                        animation: badgePulse 2s infinite; }
+                        animation: badgePulse 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
 .badge-status.ok,
 .status-ok            { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
 .badge-status.open    { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
@@ -169,7 +175,7 @@ body {
   justify-content: center;
   font-size: .8rem;
   border-radius: 6px;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-table-action.btn-pay-modal:hover {
   background-color: #16a34a !important;
@@ -179,8 +185,8 @@ body {
 }
 
 @keyframes badgePulse {
-  0%,100% { box-shadow: none; }
-  50%      { box-shadow: 0 0 0 3px rgba(139,92,246,.2); }
+  0%,100% { transform: scale(1); box-shadow: none; }
+  50%      { transform: scale(1.02); box-shadow: 0 0 0 4px rgba(139,92,246,.15); }
 }
 
 /* ── Chips de resumo ────────────────────────────────────── */
@@ -212,7 +218,7 @@ body {
 .btn-filter {
   border-radius: 999px; font-size: .78rem; padding: 4px 14px;
   background: transparent; border: 1px solid var(--border);
-  color: var(--text-muted); transition: all .15s; white-space: nowrap;
+  color: var(--text-muted); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
 }
 .btn-filter.active, .btn-filter:hover {
   background: var(--brand); border-color: var(--brand); color: #fff;
@@ -421,7 +427,7 @@ body {
 /* KPI Chips clicáveis com efeito premium hover */
 .chip-clickable {
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 .chip-clickable:hover {
   transform: translateY(-2px);
@@ -446,7 +452,7 @@ body {
   font-weight: 500;
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 .sys-toast.show {
@@ -463,156 +469,55 @@ body {
   font-size: 1.1rem;
 }
 
-/* Efeito de gota de água e ondulação de carregamento */
+/* Efeito de carregamento suave e moderno */
 .water-loader {
-  position: relative;
-  width: 100%;
-  height: 150px;
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 15px auto;
+  margin: 24px auto;
+  gap: 12px;
+  width: 100%;
 }
-
-.water-loader .drop {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  top: 15px;
-  background: var(--brand);
+.water-loader .spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--brand);
   border-radius: 50%;
-  animation: drip 1.8s infinite cubic-bezier(0.6, 0.05, 0.9, 0.15);
+  animation: spinLoader 0.75s linear infinite;
 }
-
-.water-loader .drop::before {
-  content: "";
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 20px solid var(--brand);
-  top: -15px;
-  left: 0;
-}
-
-.water-loader .wave {
-  position: absolute;
-  opacity: 0;
-  top: 100px;
-  width: 2px;
-  height: 1px;
-  border: var(--brand) 4px solid;
-  border-radius: 300px / 150px;
-  animation: ripple 1.8s infinite;
-}
-
-.water-loader .wave::after {
-  content: "";
-  position: absolute;
-  opacity: 0;
-  top: -5px;
-  left: -5px;
-  width: 2px;
-  height: 1px;
-  border: var(--brand) 3px solid;
-  border-radius: 300px / 150px;
-  animation: ripple-two 1.8s infinite;
-}
-
 .water-loader .loader-text {
-  position: absolute;
-  bottom: 0px;
   font-size: 0.82rem;
   color: var(--text-muted);
   font-weight: 500;
   letter-spacing: 0.02em;
 }
-
-@keyframes drip {
-  0% {
-    top: 15px;
-    opacity: 1;
-  }
-  65% {
-    top: 100px;
-    opacity: 1;
-  }
-  65.1%, 100% {
-    top: 100px;
-    opacity: 0;
-  }
-}
-
-@keyframes ripple {
-  0%, 65% {
-    opacity: 0;
-    width: 2px;
-    height: 1px;
-    top: 100px;
-  }
-  66% {
-    opacity: 1;
-    width: 2px;
-    height: 1px;
-    top: 100px;
-  }
-  100% {
-    width: 200px;
-    height: 60px;
-    border-width: 1px;
-    top: 70px;
-    opacity: 0;
-  }
-}
-
-@keyframes ripple-two {
-  0%, 75% {
-    opacity: 0;
-    width: 2px;
-    height: 1px;
-    top: -5px;
-    left: -5px;
-  }
-  76% {
-    opacity: 1;
-    width: 2px;
-    height: 1px;
-    top: -5px;
-    left: -5px;
-  }
-  100% {
-    width: 100px;
-    height: 30px;
-    border-width: 1px;
-    top: -15px;
-    left: -50px;
-    opacity: 0;
-  }
+@keyframes spinLoader {
+  to { transform: rotate(360deg); }
 }
 
 /* Transição suave/cascata ao carregar os dados das tabelas */
 .table tbody tr {
   opacity: 0;
-  animation: fadeInRow 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeInRow 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.table tbody tr:nth-child(1) { animation-delay: 0.05s; }
-.table tbody tr:nth-child(2) { animation-delay: 0.1s; }
-.table tbody tr:nth-child(3) { animation-delay: 0.15s; }
-.table tbody tr:nth-child(4) { animation-delay: 0.2s; }
-.table tbody tr:nth-child(5) { animation-delay: 0.25s; }
-.table tbody tr:nth-child(6) { animation-delay: 0.3s; }
-.table tbody tr:nth-child(7) { animation-delay: 0.35s; }
-.table tbody tr:nth-child(8) { animation-delay: 0.4s; }
-.table tbody tr:nth-child(9) { animation-delay: 0.45s; }
-.table tbody tr:nth-child(10) { animation-delay: 0.5s; }
+.table tbody tr:nth-child(1) { animation-delay: 0.03s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.06s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.09s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.12s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.15s; }
+.table tbody tr:nth-child(6) { animation-delay: 0.18s; }
+.table tbody tr:nth-child(7) { animation-delay: 0.21s; }
+.table tbody tr:nth-child(8) { animation-delay: 0.24s; }
+.table tbody tr:nth-child(9) { animation-delay: 0.27s; }
+.table tbody tr:nth-child(10) { animation-delay: 0.3s; }
 
 @keyframes fadeInRow {
   0% {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(4px);
   }
   100% {
     opacity: 1;
@@ -719,6 +624,156 @@ body {
 .site-header nav .btn:hover {
   transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out !important;
 }
+
+/* ── SISTEMA DE MODAIS CUSTOMIZADOS (sysAlert, sysConfirm, Modais Gerais) ── */
+.custom-modal {
+  position: fixed; inset: 0; z-index: 9200;
+  background: rgba(15, 23, 42, 0);
+  backdrop-filter: blur(0px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  visibility: hidden;
+  transition: background-color 0.25s ease, backdrop-filter 0.25s ease, visibility 0.25s ease;
+}
+.custom-modal.show {
+  visibility: visible;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+}
+.custom-modal-box {
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.92) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+.custom-modal.show .custom-modal-box {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* ── AUTOCOMPLETE DROPDOWN DE PRODUTOS ── */
+#prodDropdown {
+  position: fixed; z-index: 9100;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.13);
+  max-height: 220px; overflow-y: auto;
+  min-width: 240px;
+  opacity: 0;
+  transform: scale(0.96) translateY(5px);
+  visibility: hidden;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#prodDropdown.show {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  visibility: visible;
+}
+
+/* ── TRANSIÇÃO SUAVE DE ENTRADA DA PÁGINA ── */
+.wrap {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: pageEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes pageEntrance {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── ALTURA MÍNIMA PARA EVITAR COLAPSO DAS TABELAS ── */
+.dashboard-table-container {
+  min-height: 280px;
+}
+
+/* ── CORES E ALINHAMENTO DE STATUS DE PARCELAS ── */
+.badge-payment-pago,
+.badge-payment-avencer,
+.badge-payment-pendente,
+.badge-payment-vencido,
+.badge-payment-protesto,
+.badge-payment-estorno {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 22px !important;
+  padding: 0 10px !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+.badge-payment-pago {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+.badge-payment-avencer {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fcd34d !important;
+}
+.badge-payment-pendente {
+  background-color: #eff6ff !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+.badge-payment-vencido {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+}
+.badge-payment-protesto {
+  background-color: #7f1d1d !important;
+  color: #ffffff !important;
+  border: 1px solid #991b1b !important;
+}
+.badge-payment-estorno {
+  background-color: #f3f4f6 !important;
+  color: #4b5563 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Override menor para linhas de relatórios */
+.payment-row .badge-payment-pago,
+.payment-row .badge-payment-avencer,
+.payment-row .badge-payment-pendente,
+.payment-row .badge-payment-vencido,
+.payment-row .badge-payment-protesto,
+.payment-row .badge-payment-estorno {
+  height: 18px !important;
+  padding: 0 8px !important;
+  font-size: 0.62rem !important;
+}
+
+/* ── BOTÕES ESTILO BADGE INTERATIVO ── */
+.btn-badge-payment {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  outline: none;
+}
+.btn-badge-payment:hover {
+  transform: scale(1.05);
+  filter: brightness(0.95);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+.btn-badge-payment:active {
+  transform: scale(0.97);
+}
+
 
 
 
