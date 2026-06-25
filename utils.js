@@ -728,7 +728,7 @@ async function gerarPDF(b, download) {
         { content: String(i + 1), styles: { halign: 'center' } },
         it.descricao || '-',
         { content: String(it.qtd || 0), styles: { halign: 'center' } },
-        { content: currencyBR(it.unitario || 0), styles: { halign: 'right' } },
+        { content: currencyBR(it.unit || it.unitario || 0), styles: { halign: 'right' } },
         { content: currencyBR(it.total || 0), styles: { halign: 'right' } }
       ];
     }),
