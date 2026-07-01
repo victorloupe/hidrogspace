@@ -269,11 +269,8 @@ function renderChart(budgets) {
           var due = b.dueISO || parseValidityToISO(b.extras && b.extras.validade, b.data);
           var dleft = due ? diffDays(due, todayISOStr) : NaN;
           var st = statusInfoByDleft(dleft);
-          if (st.key === 'expired') {
+          if (st.key === 'expired' || st.key === 'soon' || st.key === 'today') {
             monthlyData[key].orcAlerta += total;
-          } else if (st.key === 'soon' || st.key === 'today') {
-            monthlyData[key].orcAlerta += total;
-            monthlyData[key].orcAbertos += total;
           } else {
             monthlyData[key].orcAbertos += total;
           }
@@ -418,15 +415,9 @@ async function renderPage() {
 
     var status = o.status || (o.extras && o.extras.status) || 'Aberto';
     if (status === 'Aberto') {
-      if (st.key === 'expired') {
+      if (st.key === 'expired' || st.key === 'soon' || st.key === 'today') {
         kpi.orcAlerta.count++;
         kpi.orcAlerta.val += totalVal;
-      } else if (st.key === 'soon' || st.key === 'today') {
-        kpi.orcAlerta.count++;
-        kpi.orcAlerta.val += totalVal;
-        
-        kpi.orcAbertos.count++;
-        kpi.orcAbertos.val += totalVal;
       } else {
         kpi.orcAbertos.count++;
         kpi.orcAbertos.val += totalVal;

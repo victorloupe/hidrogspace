@@ -78,7 +78,7 @@
 
       <!-- Filtros rapidos -->
       <div class="d-flex flex-wrap align-items-center gap-2 px-4 py-2 border-bottom no-print" style="background:#fafafa">
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
           <button class="btn btn-sm btn-filter active" data-filter="all">Todos</button>
           <button class="btn btn-sm btn-filter" data-filter="today">Vence Hoje</button>
           <button class="btn btn-sm btn-filter" data-filter="soon_only">Em Breve</button>
@@ -678,14 +678,16 @@ function exportarCSV() {
     var dleft = due ? diffDays(due, today) : NaN;
     var st = statusInfoByDleft(dleft);
     var total = o.totalNumber != null ? o.totalNumber : ((o.valores && o.valores.total)||0);
-    
+    var status = o.status || (o.extras && o.extras.status) || 'Aberto';
+    var statusLabel = (status && status !== 'Aberto') ? status : st.label;
+
     return [
       o.id || '',
       o.clientName || (o.client && o.client.name) || '',
       total,
       fmtBR(issue),
       fmtBR(due),
-      st.label
+      statusLabel
     ];
   });
   

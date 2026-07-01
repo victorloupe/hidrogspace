@@ -1112,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var baseDate = new Date();
     for (var i = 1; i <= N; i++) {
       var due = new Date(baseDate.getFullYear(), baseDate.getMonth() + (i - 1), baseDate.getDate());
-      var dueISO = due.toISOString().slice(0, 10);
+      var dueISO = new Date(due.getTime() - due.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
       var pVal = (i === N) ? lastVal : val;
       
       var isPaid = getVal('budgetStatus') === 'Pago';
@@ -1223,7 +1223,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   $id('novoOrcamento').addEventListener('click', confirmarNovo);
-  $id('navNovoBtn').addEventListener('click', confirmarNovo);
+  var navNovoBtn = $id('navNovoBtn');
+  if (navNovoBtn) navNovoBtn.addEventListener('click', confirmarNovo);
 
   /* Timer de Salvamento Automático (Rascunho) */
   setInterval(function() {
