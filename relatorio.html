@@ -678,14 +678,16 @@ function exportarCSV() {
     var dleft = due ? diffDays(due, today) : NaN;
     var st = statusInfoByDleft(dleft);
     var total = o.totalNumber != null ? o.totalNumber : ((o.valores && o.valores.total)||0);
-    
+    var status = o.status || (o.extras && o.extras.status) || 'Aberto';
+    var statusLabel = (status && status !== 'Aberto') ? status : st.label;
+
     return [
       o.id || '',
       o.clientName || (o.client && o.client.name) || '',
       total,
       fmtBR(issue),
       fmtBR(due),
-      st.label
+      statusLabel
     ];
   });
   
