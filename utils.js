@@ -669,10 +669,10 @@ async function gerarPDF(b, download) {
   /* Helper tabela sem bordas */
   function plainTable(startY, body, colStyles) {
     doc.autoTable({
-      startY: startY, margin: { left: ML, right: ML }, body: body,
-      styles: { fontSize: 8.5, cellPadding: 2, overflow: 'ellipsis', textColor: [40, 40, 40] },
+      startY: startY, margin: { left: ML, right: ML, bottom: 18 }, body: body,
+      styles: { fontSize: 8.5, cellPadding: 2, overflow: 'linebreak', textColor: [40, 40, 40] },
       columnStyles: colStyles,
-      theme: 'plain', pageBreak: 'avoid'
+      theme: 'plain'
     });
     return doc.lastAutoTable.finalY + 2;
   }
@@ -715,7 +715,7 @@ async function gerarPDF(b, download) {
   var fs = Math.max(6, Math.min(9, Math.floor((availH / (N + 1) - 2 * cellPad) / 0.3528)));
 
   doc.autoTable({
-    startY: y, margin: { left: ML, right: ML },
+    startY: y, margin: { left: ML, right: ML, bottom: 18 },
     head: [[
       { content: '#', styles: { halign: 'center' } },
       'Descrição',
@@ -741,7 +741,7 @@ async function gerarPDF(b, download) {
       4: { cellWidth: 28 }
     },
     headStyles: { fillColor: BRAND, textColor: [255, 255, 255], fontStyle: 'bold' },
-    theme: 'striped', pageBreak: 'avoid'
+    theme: 'striped'
   });
   y = doc.lastAutoTable.finalY + 4;
 
@@ -774,6 +774,7 @@ async function gerarPDF(b, download) {
   if (x.pagamento) conds.push([lbl('Pagamento:'),       x.pagamento]);
 
   if (conds.length > 0 || x.obs) {
+    if (y > PH - 45) { doc.addPage(); y = ML + 10; }
     y = secHeader('INFORMAÇÕES COMPLEMENTARES', y);
 
     if (conds.length > 0) {
@@ -786,15 +787,15 @@ async function gerarPDF(b, download) {
         ]);
       }
       y = plainTable(y, condRows, {
-        0: { cellWidth: 44 }, 1: { cellWidth: 49 },
-        2: { cellWidth: 44 }, 3: { cellWidth: 'auto' }
+        0: { cellWidth: 30 }, 1: { cellWidth: 63 },
+        2: { cellWidth: 30 }, 3: { cellWidth: 'auto' }
       });
     }
 
     if (x.obs) {
       y = plainTable(y,
         [[lbl('Observações:'), x.obs]],
-        { 0: { cellWidth: 40 }, 1: { cellWidth: 'auto', overflow: 'linebreak' } }
+        { 0: { cellWidth: 30 }, 1: { cellWidth: 'auto' } }
       );
     }
   }
@@ -838,13 +839,20 @@ async function gerarPDF(b, download) {
     y = doc.lastAutoTable.finalY + 4;
   }
 
-  /* Rodape */
-  doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
-  doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
-  doc.text(
-    'HIDRO G BOMBAS SUBMERSAS LTDA.   -   CNPJ: 12.835.772/0001-22   -   Tel: (17) 3216-5760',
-    PW / 2, PH - 9, { align: 'center' }
-  );
+  /* Rodape (em todas as paginas) */
+  var totalPaginas = doc.getNumberOfPages();
+  for (var pg = 1; pg <= totalPaginas; pg++) {
+    doc.setPage(pg);
+    doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
+    doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
+    doc.text(
+      'HIDRO G BOMBAS SUBMERSAS LTDA.   -   CNPJ: 12.835.772/0001-22   -   Tel: (17) 3216-5760',
+      PW / 2, PH - 9, { align: 'center' }
+    );
+    if (totalPaginas > 1) {
+      doc.text('Pagina ' + pg + ' de ' + totalPaginas, MR, PH - 9, { align: 'right' });
+    }
+  }
 
   /* Salva */
   var fn = [
