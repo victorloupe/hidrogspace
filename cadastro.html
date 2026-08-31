@@ -43,6 +43,28 @@
     .prod-item .pi-price { color:#0ea5e9; font-weight:600; white-space:nowrap; font-size:.8rem; }
     .prod-item.pi-add { color:#0ea5e9; font-style:italic; gap:6px; }
     .prod-item.pi-add:hover { background:#f0f9ff; }
+
+    /* ── Reordenar itens (arrastar) ──────────────────── */
+    .row-handle-cell { white-space: nowrap; }
+    .drag-handle {
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #cbd5e1; cursor: grab; padding: 2px 3px; margin-right: 1px;
+      font-size: .8rem; border-radius: 6px; touch-action: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .drag-handle:hover { color: var(--brand); background: var(--brand-50); }
+    .drag-handle:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+    .drag-handle:active { cursor: grabbing; }
+    #itemsTbody tr.row-dragging > td { background: var(--brand-50) !important; }
+    #itemsTbody tr.row-dragging { box-shadow: 0 6px 18px rgba(15,23,42,.14); }
+    #itemsTbody tr.row-dragging .drag-handle { color: var(--brand); cursor: grabbing; }
+    #itemsTbody tr.row-moved > td { animation: rowMoved .5s ease; }
+    @keyframes rowMoved { from { background: var(--brand-50); } to { background: transparent; } }
+    body.reordering-rows { -webkit-user-select: none; user-select: none; }
+    @media (max-width: 576px) {
+      .drag-handle { font-size: 1rem; padding: 6px 5px; color: #94a3b8; min-width: 26px; min-height: 30px; }
+    }
   </style>
 </head>
 <body>
@@ -134,7 +156,12 @@
   </div>
 
   <div class="section-header d-flex justify-content-between align-items-center">
-    <span id="labelItensOrcamentoPedido">Itens do Orçamento</span>
+    <span>
+      <span id="labelItensOrcamentoPedido">Itens do Orçamento</span>
+      <small class="text-muted fw-normal no-print d-none d-sm-inline ms-2" style="font-size:.72rem">
+        <i class="fa-solid fa-grip-vertical"></i> arraste para reordenar
+      </small>
+    </span>
     <button class="btn btn-sm btn-soft-primary no-print" id="btnAddRow" type="button">
       <i class="fa-solid fa-plus"></i> Adicionar item
     </button>
@@ -143,7 +170,7 @@
     <table class="table table-bordered table-sm align-middle mb-2" id="itemsTable">
       <thead class="table-light">
         <tr>
-          <th style="width:44px">#</th>
+          <th style="width:62px" class="text-center">#</th>
           <th>Descrição</th>
           <th style="width:80px">Qtd</th>
           <th style="width:140px">Valor Unit.</th>
@@ -296,7 +323,10 @@ function gerarNumeroDiario() {
 function criarLinha(num) {
   var tr = document.createElement('tr');
   tr.innerHTML =
-    '<td class="text-center row-num text-muted fw-bold" style="font-size:.82rem">' + num + '</td>' +
+    '<td class="text-center row-handle-cell text-muted fw-bold" style="font-size:.82rem">' +
+      '<span class="drag-handle no-print" role="button" tabindex="0" aria-label="Arrastar para reordenar item" title="Arraste para reordenar (ou use as setas do teclado)"><i class="fa-solid fa-grip-vertical"></i></span>' +
+      '<span class="row-num">' + num + '</span>' +
+    '</td>' +
     '<td><input class="form-control form-control-sm row-desc" type="text" autocomplete="off"></td>' +
     '<td><input class="form-control form-control-sm row-qtd" type="number" value="0" min="0" step="0.001"></td>' +
     '<td><input class="form-control form-control-sm row-unit" placeholder="R$ 0,00"></td>' +
@@ -320,6 +350,7 @@ function criarLinha(num) {
   descEl.addEventListener('keydown', function(e) { handleProdKey(e, tr); });
 
   enableSwipeToDelete(tr);
+  enableRowDrag(tr);
   return tr;
 }
 
@@ -335,15 +366,18 @@ function addRow() {
   tbody.appendChild(criarLinha(tbody.rows.length + 1));
 }
 
+function renumerarLinhas() {
+  $id('itemsTbody').querySelectorAll('tr').forEach(function(tr, i) {
+    var n = tr.querySelector('.row-num');
+    if (n) n.textContent = i + 1;
+  });
+}
+
 function removerLinha(btn) {
   var tbody = $id('itemsTbody');
   if (tbody.rows.length <= 1) return;
   btn.closest('tr').remove();
-  var rows = tbody.querySelectorAll('tr');
-  rows.forEach(function(tr, i) {
-    var n = tr.querySelector('.row-num');
-    if (n) n.textContent = i + 1;
-  });
+  renumerarLinhas();
   recalc();
 }
 
@@ -360,11 +394,7 @@ function removerLinhaDirect(tr) {
     return;
   }
   tr.remove();
-  var rows = tbody.querySelectorAll('tr');
-  rows.forEach(function(r, i) {
-    var n = r.querySelector('.row-num');
-    if (n) n.textContent = i + 1;
-  });
+  renumerarLinhas();
   recalc();
 }
 
@@ -376,13 +406,15 @@ function enableSwipeToDelete(tr) {
   
   tr.addEventListener('touchstart', function(e) {
     if (window.innerWidth > 576) return;
+    if (_dragRow) return;
+    if (e.target && e.target.closest && e.target.closest('.drag-handle')) return;
     startX = e.touches[0].clientX;
     tr.style.transition = 'none';
     isSwiping = true;
   }, { passive: true });
   
   tr.addEventListener('touchmove', function(e) {
-    if (!isSwiping) return;
+    if (!isSwiping || _dragRow) return;
     currentX = e.touches[0].clientX;
     var diffX = currentX - startX;
     
@@ -418,6 +450,127 @@ function enableSwipeToDelete(tr) {
       tr.style.transform = 'translateX(0)';
       tr.style.opacity = '1';
     }
+  });
+}
+
+/* ── Reordenacao das linhas por arrastar ──────────────
+   Funciona no desktop (mouse), no celular (toque na alca)
+   e pelo teclado (setas cima/baixo com a alca focada).    */
+var _dragRow = null;
+
+function moverLinha(tr, delta) {
+  var tbody = $id('itemsTbody');
+  if (!tr || !tbody) return false;
+  var ref = delta < 0 ? tr.previousElementSibling
+                      : (tr.nextElementSibling ? tr.nextElementSibling.nextElementSibling : null);
+  if (delta < 0 && !ref) return false;
+  if (delta > 0 && !tr.nextElementSibling) return false;
+  tbody.insertBefore(tr, ref);
+  renumerarLinhas();
+  destacarLinha(tr);
+  return true;
+}
+
+function destacarLinha(tr) {
+  tr.classList.remove('row-moved');
+  void tr.offsetWidth; // reinicia a animacao
+  tr.classList.add('row-moved');
+  setTimeout(function() { tr.classList.remove('row-moved'); }, 520);
+}
+
+function linhaAlvoDrop(y) {
+  var rows = $id('itemsTbody').querySelectorAll('tr');
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i] === _dragRow) continue;
+    var box = rows[i].getBoundingClientRect();
+    if (y < box.top + box.height / 2) return rows[i];
+  }
+  return null;
+}
+
+function dragStart(tr, y) {
+  _dragRow = tr;
+  tr.classList.add('row-dragging');
+  document.body.classList.add('reordering-rows');
+  if (typeof hideProdDropdown === 'function') hideProdDropdown();
+  dragMove(y);
+}
+
+function dragMove(y) {
+  if (!_dragRow) return;
+  var tbody = $id('itemsTbody');
+
+  // rola a pagina quando o dedo/mouse chega perto das bordas
+  var margem = 70;
+  if (y < margem) window.scrollBy(0, -14);
+  else if (y > window.innerHeight - margem) window.scrollBy(0, 14);
+
+  var ref = linhaAlvoDrop(y);
+  if (ref === _dragRow) return;
+  if (ref && ref.previousElementSibling === _dragRow) return;
+  if (!ref && tbody.lastElementChild === _dragRow) return;
+  tbody.insertBefore(_dragRow, ref);
+  renumerarLinhas();
+}
+
+function dragEnd() {
+  if (!_dragRow) return;
+  var tr = _dragRow;
+  _dragRow = null;
+  tr.classList.remove('row-dragging');
+  document.body.classList.remove('reordering-rows');
+  destacarLinha(tr);
+  renumerarLinhas();
+  recalc();
+}
+
+function enableRowDrag(tr) {
+  var handle = tr.querySelector('.drag-handle');
+  if (!handle) return;
+  var moveEvt = 'pointermove', endEvt = 'pointerup';
+
+  function onMove(e) {
+    if (e.cancelable) e.preventDefault();
+    dragMove(e.touches ? e.touches[0].clientY : e.clientY);
+  }
+
+  function onEnd() {
+    document.removeEventListener(moveEvt, onMove, { passive: false });
+    document.removeEventListener(endEvt, onEnd);
+    document.removeEventListener('pointercancel', onEnd);
+    document.removeEventListener('touchcancel', onEnd);
+    dragEnd();
+  }
+
+  function onStart(e) {
+    if (_dragRow) return;
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.cancelable) e.preventDefault();
+    if (e.type === 'pointerdown')      { moveEvt = 'pointermove'; endEvt = 'pointerup'; }
+    else if (e.type === 'touchstart')  { moveEvt = 'touchmove';   endEvt = 'touchend'; }
+    else                               { moveEvt = 'mousemove';   endEvt = 'mouseup'; }
+    document.addEventListener(moveEvt, onMove, { passive: false });
+    document.addEventListener(endEvt, onEnd);
+    document.addEventListener('pointercancel', onEnd);
+    document.addEventListener('touchcancel', onEnd);
+    dragStart(tr, e.touches ? e.touches[0].clientY : e.clientY);
+  }
+
+  if (window.PointerEvent) {
+    handle.addEventListener('pointerdown', onStart);
+  } else {
+    handle.addEventListener('mousedown', onStart);
+    handle.addEventListener('touchstart', onStart, { passive: false });
+  }
+
+  handle.addEventListener('keydown', function(e) {
+    var delta = 0;
+    if (e.key === 'ArrowUp')   delta = -1;
+    if (e.key === 'ArrowDown') delta = 1;
+    if (!delta) return;
+    e.preventDefault();
+    if (moverLinha(tr, delta)) { recalc(); handle.focus(); }
   });
 }
 
