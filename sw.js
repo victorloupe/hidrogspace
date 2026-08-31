@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hidrog-space-v6';
+const CACHE_NAME = 'hidrog-space-v7';
 const ASSETS = [
   './',
   './index.html',
