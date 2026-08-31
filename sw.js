@@ -6,13 +6,13 @@ const ASSETS = [
   './relatorio.html',
   './produtos.html',
   './login.html',
-  './styles.css?v=6',
-  './utils.js?v=6',
+  './styles.css?v=7',
+  './utils.js?v=7',
   './favicon.ico',
   './logohidrog.png',
-  './icon-192.png?v=6',
-  './icon-512.png?v=6',
-  './manifest.json?v=6'
+  './icon-192.png?v=7',
+  './icon-512.png?v=7',
+  './manifest.json?v=7'
 ];
 
 // Instalação: cria o cache e guarda os recursos estáticos
