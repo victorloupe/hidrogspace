@@ -1,44 +1,106 @@
 /* styles.css — Hidro G • Design moderno + responsivo */
 
 :root {
-  --brand:      #0ea5e9;
-  --brand-600:  #0284c7;
-  --brand-700:  #0369a1;
-  --brand-50:   #f0f9ff;
-  --bg:         #f1f5f9;
-  --text:       #0f172a;
-  --text-muted: #64748b;
-  --card:       #ffffff;
-  --border:     #e2e8f0;
-  --radius:     12px;
-  --header-h:   76px;
-  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --shadow-md:  0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.05);
+  --brand:        #0ea5e9;
+  --brand-600:    #0284c7;
+  --brand-700:    #0369a1;
+  --brand-50:     #f0f9ff;
+  --bg:           #f8fafc;
+  --text:         #0f172a;
+  --text-muted:   #64748b;
+  --card:         #ffffff;
+  --border:       #e2e8f0;
+  --border-subtle:#f1f5f9;
+  --radius:       12px;
+  --radius-sm:    8px;
+  --header-h:     76px;
+  
+  /* Sistema de Elevação Impeccable */
+  --shadow-xs:    0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm:    0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow:       0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-md:    0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --shadow-lg:    0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  
+  /* Curvas de Animação Suaves (Exponential Easing) */
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Escala Tipográfica Padronizada */
+  --text-xs:      0.75rem;   /* 12px */
+  --text-sm:      0.875rem;  /* 14px */
+  --text-base:    1rem;      /* 16px */
+  --text-lg:      1.125rem;  /* 18px */
+  --text-xl:      1.25rem;   /* 20px */
+  --text-2xl:     1.5rem;    /* 24px */
+  
   --table-header: #f8fafc;
 }
 
-/* Base */
+/* Base & Superfícies do Navegador */
 html {
-  background-color: #f1f5f9; /* matches var(--bg) to prevent white flash during page load */
+  background-color: var(--bg);
   scrollbar-gutter: stable;
 }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  padding-top: var(--header-h); /* espaco para o header fixo */
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  padding-top: var(--header-h);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Header fixo ────────────────────────────────────────── */
+/* Seleção de texto temática */
+::selection {
+  background: #bae6fd;
+  color: #0369a1;
+}
+
+/* Foco acessível e consistente */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Barra de rolagem personalizada e discreta */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Numerais tabulares para dados financeiros e códigos */
+.tabular-nums,
+.kpi-card,
+.table td,
+.badge-status,
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Header fixo (com efeito translúcido Glassmorphism) ── */
 .site-header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
   height: var(--header-h);
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: var(--shadow-xs);
   display: flex; align-items: center;
   padding: 0 clamp(12px, 3vw, 32px);
   gap: 16px;
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 .site-header img {
   height: 50px;
@@ -83,13 +145,17 @@ body {
 .btn-brand {
   background: linear-gradient(135deg, var(--brand), var(--brand-600));
   border: none; color: #fff; font-weight: 600;
-  box-shadow: 0 2px 4px rgba(14,165,233,.35);
-  transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(14,165,233,.25);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s var(--ease-out);
 }
 .btn-brand:hover, .btn-brand:focus {
   background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
-  color: #fff; box-shadow: 0 4px 8px rgba(14,165,233,.4);
-  transform: translateY(-2px);
+  color: #fff; box-shadow: 0 4px 10px rgba(14,165,233,.35);
+  transform: translateY(-1px);
+}
+.btn-brand:active {
+  transform: translateY(0);
 }
 
 /* ── Cards ──────────────────────────────────────────────── */
@@ -97,12 +163,13 @@ body {
   background: var(--card);
   border: 1px solid var(--border) !important;
   border-radius: var(--radius) !important;
-  box-shadow: var(--shadow);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md), 0 10px 20px -5px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: #cbd5e1 !important;
 }
 
 /* ── KPI cards ──────────────────────────────────────────── */
@@ -110,14 +177,15 @@ body {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   padding: 16px 18px;
   display: flex; align-items: center; gap: 12px;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 .kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md), 0 10px 20px -5px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: #cbd5e1;
 }
 .kpi-icon {
   width: 44px; height: 44px; border-radius: 10px;
@@ -128,14 +196,21 @@ body {
 /* Container do formulario */
 .container-wide { background: var(--card); border-radius: var(--radius); padding: 20px; }
 
-/* Section header (cadastro) */
+/* Section header refinado (sem border-left pesado) */
 .section-header {
   background: var(--brand-50);
-  border-left: 3px solid var(--brand);
   color: var(--brand-700);
-  font-weight: 600; font-size: .9rem;
-  padding: 6px 12px; margin: 20px 0 10px;
-  border-radius: 0 6px 6px 0;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  margin: 20px 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .brand { color: var(--brand); font-weight: 700; }
 
@@ -641,16 +716,16 @@ body {
 }
 .custom-modal-box {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-lg);
   padding: 24px;
   width: 100%;
   max-width: 380px;
   text-align: center;
   opacity: 0;
-  transform: scale(0.92) translateY(10px);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  transform: scale(0.95) translateY(8px);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
 }
 .custom-modal.show .custom-modal-box {
   opacity: 1;
@@ -663,18 +738,22 @@ body {
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.13);
+  box-shadow: var(--shadow-lg);
   max-height: 220px; overflow-y: auto;
   min-width: 240px;
   opacity: 0;
   transform: scale(0.96) translateY(5px);
   visibility: hidden;
-  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  display: none;
+  transition: opacity 0.15s var(--ease-out), transform 0.15s var(--ease-out), visibility 0.15s var(--ease-out);
 }
 #prodDropdown.show {
   opacity: 1;
   transform: scale(1) translateY(0);
-  visibility: visible;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  display: block !important;
 }
 
 /* ── TRANSIÇÃO SUAVE DE ENTRADA DA PÁGINA ── */
@@ -768,10 +847,166 @@ body {
 .btn-badge-payment:hover {
   transform: scale(1.05);
   filter: brightness(0.95);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-xs);
 }
 .btn-badge-payment:active {
   transform: scale(0.97);
+}
+
+/* ── MODAL GLOBAL DE EMISSÃO & OPÇÕES DE PDF (IMPECCABLE) ── */
+.modal-backdrop.show {
+  opacity: 0.45;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+#globalPdfModal .modal-content {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  background: var(--card);
+  overflow: hidden;
+}
+
+#globalPdfModal .modal-header {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 18px 24px 14px 24px;
+}
+
+.gpdf-icon-badge {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xl);
+}
+
+.gpdf-close-btn {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+.gpdf-close-btn:hover {
+  background-color: var(--border-subtle);
+  color: var(--text);
+}
+
+.gpdf-summary-card {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.gpdf-action-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out), border-color 0.18s var(--ease-out), background-color 0.18s var(--ease-out);
+  text-decoration: none;
+  outline: none;
+}
+.gpdf-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--brand);
+  background-color: var(--brand-50);
+}
+.gpdf-action-card:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+.gpdf-action-card:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.gpdf-card-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  transition: transform 0.18s var(--ease-out);
+}
+.gpdf-action-card:hover .gpdf-card-icon {
+  transform: scale(1.08);
+}
+.gpdf-card-icon.icon-print {
+  background: #eff6ff;
+  color: #0284c7;
+  border: 1px solid #bfdbfe;
+}
+.gpdf-card-icon.icon-download {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.gpdf-card-icon.icon-share {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+.gpdf-card-icon.icon-receipt {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.gpdf-card-info {
+  flex: 1;
+  min-width: 0;
+}
+.gpdf-card-title {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.25;
+  margin-bottom: 2px;
+}
+.gpdf-card-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.gpdf-card-arrow {
+  color: #94a3b8;
+  font-size: var(--text-xs);
+  transition: transform 0.18s var(--ease-out), color 0.18s var(--ease-out);
+}
+.gpdf-action-card:hover .gpdf-card-arrow {
+  color: var(--brand);
+  transform: translateX(3px);
 }
 
 

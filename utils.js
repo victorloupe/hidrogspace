@@ -106,31 +106,136 @@ var BudgetDB = {
   }
 };
 
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto && typeof crypto.randomUUID === 'function') {
+    try { return crypto.randomUUID(); } catch(e) {}
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+var DEFAULT_PRODUCTS_SEED = [
+  { name: "Bomba Submersa 1HP HidroG", price: 1500 },
+  { name: "Bomba Submersa Ebara 2CV", price: 12000 },
+  { name: "Bomba Submersa Leão 1CV", price: 5200 },
+  { name: "Bomba Submersa 0.5HP", price: 1500 },
+  { name: "Bomba Submersa 2HP Trifásica", price: 3400 },
+  { name: "Bomba Submersa 3HP Leão", price: 5900 },
+  { name: "Bomba Submersa 5CV Alta Eficiência", price: 9500 },
+  { name: "Bomba Submersa Industrial 10CV", price: 11000 },
+  { name: "Bomba Pressurizadora Rowa", price: 2500 },
+  { name: "Quadro de Comando Monofásico", price: 800 },
+  { name: "Cabo Elétrico Subterrâneo PP 4mm (m)", price: 490 },
+  { name: "Cabo Elétrico 3x4mm 150m", price: 4500 },
+  { name: "Tubulação PVC 2pol 50m", price: 700 },
+  { name: "Kit Vedação Bomba Submersa", price: 350 },
+  { name: "Manutenção Preventiva de Conjunto Motobomba", price: 3100 },
+  { name: "Instalação e Mão de Obra", price: 2000 }
+];
+
 var ProductDB = {
 
   getAll: async function() {
+    var supaList = [];
     try {
       var res = await getSupa().from('products').select('*').order('name');
-      if (res.error) throw res.error;
-      return res.data || [];
-    } catch(e) { console.error('[ProductDB] getAll:', e.message); return []; }
+      if (!res.error && res.data && res.data.length > 0) {
+        supaList = res.data;
+        try { localStorage.setItem('cached_products', JSON.stringify(supaList)); } catch(e) {}
+        return supaList;
+      }
+    } catch(e) { console.warn('[ProductDB] getAll Supabase:', e.message); }
+
+    // Fallback 1: cache local de produtos salvos
+    try {
+      var local = localStorage.getItem('cached_products');
+      if (local) {
+        var parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch(e) {}
+
+    // Fallback 2: extrai produtos já utilizados em orçamentos existentes
+    try {
+      var budgets = await BudgetDB.getAll();
+      var extractedMap = {};
+      budgets.forEach(function(b) {
+        (b.items || []).forEach(function(it) {
+          var desc = (it.descricao || it.description || '').trim();
+          var price = parseFloat(it.unit || it.unitario) || 0;
+          if (desc && !extractedMap[desc.toLowerCase()]) {
+            extractedMap[desc.toLowerCase()] = {
+              id: generateUUID(),
+              name: desc,
+              price: price
+            };
+          }
+        });
+      });
+      var extracted = Object.values(extractedMap);
+      if (extracted.length > 0) {
+        extracted.sort(function(a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
+        try { localStorage.setItem('cached_products', JSON.stringify(extracted)); } catch(e) {}
+        extracted.forEach(function(p) {
+          getSupa().from('products').upsert({ id: p.id, name: p.name, price: p.price }).catch(function(){});
+        });
+        return extracted;
+      }
+    } catch(e) {}
+
+    // Fallback 3: catálogo inicial padrão
+    var seeded = DEFAULT_PRODUCTS_SEED.map(function(p) {
+      return { id: generateUUID(), name: p.name, price: p.price };
+    });
+    try { localStorage.setItem('cached_products', JSON.stringify(seeded)); } catch(e) {}
+    seeded.forEach(function(p) {
+      getSupa().from('products').upsert({ id: p.id, name: p.name, price: p.price }).catch(function(){});
+    });
+    return seeded;
   },
 
   save: async function(p) {
+    if (!p.id) p.id = generateUUID();
+
+    // Salva localmente imediatamente
+    try {
+      var local = [];
+      try { local = JSON.parse(localStorage.getItem('cached_products') || '[]'); } catch(e) {}
+      var idx = local.findIndex(function(x) { return x.id === p.id; });
+      if (idx >= 0) local[idx] = p; else local.push(p);
+      localStorage.setItem('cached_products', JSON.stringify(local));
+    } catch(e) {}
+
+    // Sincroniza com o Supabase
     try {
       var res = await getSupa().from('products').upsert(
         { id: p.id, name: p.name, price: p.price },
         { onConflict: 'id' }
       );
-      if (res.error) throw res.error;
-    } catch(e) { console.error('[ProductDB] save:', e.message); throw e; }
+      if (res.error) console.warn('[ProductDB] Supabase upsert:', res.error.message);
+    } catch(e) {
+      console.warn('[ProductDB] save Supabase falhou, mantido em cache local:', e.message);
+    }
   },
 
   remove: async function(id) {
+    // Remove localmente imediatamente
+    try {
+      var local = [];
+      try { local = JSON.parse(localStorage.getItem('cached_products') || '[]'); } catch(e) {}
+      local = local.filter(function(x) { return x.id !== id; });
+      localStorage.setItem('cached_products', JSON.stringify(local));
+    } catch(e) {}
+
+    // Remove do Supabase
     try {
       var res = await getSupa().from('products').delete().eq('id', id);
-      if (res.error) throw res.error;
-    } catch(e) { console.error('[ProductDB] remove:', e.message); throw e; }
+      if (res.error) console.warn('[ProductDB] Supabase delete:', res.error.message);
+    } catch(e) {
+      console.warn('[ProductDB] remove Supabase falhou, removido do cache local:', e.message);
+    }
   }
 
 };
@@ -669,10 +774,10 @@ async function gerarPDF(b, download) {
   /* Helper tabela sem bordas */
   function plainTable(startY, body, colStyles) {
     doc.autoTable({
-      startY: startY, margin: { left: ML, right: ML }, body: body,
-      styles: { fontSize: 8.5, cellPadding: 2, overflow: 'ellipsis', textColor: [40, 40, 40] },
+      startY: startY, margin: { left: ML, right: ML, bottom: 18 }, body: body,
+      styles: { fontSize: 8.5, cellPadding: 2, overflow: 'linebreak', textColor: [40, 40, 40] },
       columnStyles: colStyles,
-      theme: 'plain', pageBreak: 'avoid'
+      theme: 'plain'
     });
     return doc.lastAutoTable.finalY + 2;
   }
@@ -715,7 +820,7 @@ async function gerarPDF(b, download) {
   var fs = Math.max(6, Math.min(9, Math.floor((availH / (N + 1) - 2 * cellPad) / 0.3528)));
 
   doc.autoTable({
-    startY: y, margin: { left: ML, right: ML },
+    startY: y, margin: { left: ML, right: ML, bottom: 18 },
     head: [[
       { content: '#', styles: { halign: 'center' } },
       'Descrição',
@@ -741,7 +846,7 @@ async function gerarPDF(b, download) {
       4: { cellWidth: 28 }
     },
     headStyles: { fillColor: BRAND, textColor: [255, 255, 255], fontStyle: 'bold' },
-    theme: 'striped', pageBreak: 'avoid'
+    theme: 'striped'
   });
   y = doc.lastAutoTable.finalY + 4;
 
@@ -774,6 +879,7 @@ async function gerarPDF(b, download) {
   if (x.pagamento) conds.push([lbl('Pagamento:'),       x.pagamento]);
 
   if (conds.length > 0 || x.obs) {
+    if (y > PH - 45) { doc.addPage(); y = ML + 10; }
     y = secHeader('INFORMAÇÕES COMPLEMENTARES', y);
 
     if (conds.length > 0) {
@@ -786,15 +892,15 @@ async function gerarPDF(b, download) {
         ]);
       }
       y = plainTable(y, condRows, {
-        0: { cellWidth: 44 }, 1: { cellWidth: 49 },
-        2: { cellWidth: 44 }, 3: { cellWidth: 'auto' }
+        0: { cellWidth: 30 }, 1: { cellWidth: 63 },
+        2: { cellWidth: 30 }, 3: { cellWidth: 'auto' }
       });
     }
 
     if (x.obs) {
       y = plainTable(y,
         [[lbl('Observações:'), x.obs]],
-        { 0: { cellWidth: 40 }, 1: { cellWidth: 'auto', overflow: 'linebreak' } }
+        { 0: { cellWidth: 30 }, 1: { cellWidth: 'auto' } }
       );
     }
   }
@@ -838,26 +944,41 @@ async function gerarPDF(b, download) {
     y = doc.lastAutoTable.finalY + 4;
   }
 
-  /* Rodape */
-  doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
-  doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
-  doc.text(
-    'HIDRO G BOMBAS SUBMERSAS LTDA.   -   CNPJ: 12.835.772/0001-22   -   Tel: (17) 3216-5760',
-    PW / 2, PH - 9, { align: 'center' }
-  );
+  /* Rodape (em todas as paginas) */
+  var totalPaginas = doc.getNumberOfPages();
+  for (var pg = 1; pg <= totalPaginas; pg++) {
+    doc.setPage(pg);
+    doc.setDrawColor(14, 165, 233).setLineWidth(0.5).line(ML, PH - 14, MR, PH - 14);
+    doc.setFontSize(7).setFont(undefined, 'normal').setTextColor(120, 120, 120);
+    doc.text(
+      'HIDRO G BOMBAS SUBMERSAS LTDA.   -   CNPJ: 12.835.772/0001-22   -   Tel: (17) 3216-5760',
+      PW / 2, PH - 9, { align: 'center' }
+    );
+    if (totalPaginas > 1) {
+      doc.text('Pagina ' + pg + ' de ' + totalPaginas, MR, PH - 9, { align: 'right' });
+    }
+  }
 
-  /* Salva */
+  /* Salva / Abre */
   var fn = [
     (b.id || 'orcamento').replace(/[^\w\-]+/g, '_'),
     (b.data || '').replace(/[^\d]/g, ''),
     (b.clientName || 'cliente').replace(/[^\w\-]+/g, '_').slice(0, 20)
   ].filter(Boolean).join('_') + '.pdf';
 
-  if (download) {
+  var blob = doc.output('blob');
+  var file = null;
+  try {
+    file = new File([blob], fn, { type: 'application/pdf' });
+  } catch (e) {}
+
+  if (download === true || download === 'download') {
     doc.save(fn);
-  } else {
-    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+  } else if (download === false || download === 'open') {
+    window.open(URL.createObjectURL(blob), '_blank');
   }
+
+  return { doc: doc, filename: fn, blob: blob, file: file };
 }
 
 /* Gerar Recibo PDF */
@@ -1081,13 +1202,21 @@ async function gerarReciboPDF(b, download) {
     PW / 2, PH - 9, { align: 'center' }
   );
 
-  /* Salva */
+  /* Salva / Abre */
   var fn = 'recibo_' + (b.id || 'recibo').replace(/[^\w\-]+/g, '_') + '.pdf';
-  if (download) {
+  var blob = doc.output('blob');
+  var file = null;
+  try {
+    file = new File([blob], fn, { type: 'application/pdf' });
+  } catch (e) {}
+
+  if (download === true || download === 'download') {
     doc.save(fn);
-  } else {
-    window.open(URL.createObjectURL(doc.output('blob')), '_blank');
+  } else if (download === false || download === 'open') {
+    window.open(URL.createObjectURL(blob), '_blank');
   }
+
+  return { doc: doc, filename: fn, blob: blob, file: file };
 }
 
 /* Função utilitária para extenso simples em BRL */
@@ -1148,10 +1277,52 @@ function valorPorExtensoSimples(valor) {
   }
 }
 
-/* Navbar Dinâmica */
+/* Gerador de ID Diário Seguro (consulta Supabase para evitar sobrescrita entre múltiplos aparelhos) */
+async function gerarProximoNumeroOrcamento() {
+  var n = new Date();
+  var ymd = n.getFullYear() + ('0' + (n.getMonth() + 1)).slice(-2) + ('0' + n.getDate()).slice(-2);
+  var prefix = ymd + '-';
+  var maxSeq = 0;
+
+  try {
+    var res = await getSupa()
+      .from('budgets')
+      .select('id')
+      .gte('id', prefix + '000')
+      .lte('id', prefix + '999');
+
+    if (res.data && res.data.length > 0) {
+      res.data.forEach(function(row) {
+        var parts = String(row.id || '').split('-');
+        if (parts.length === 2 && parts[0] === ymd) {
+          var num = parseInt(parts[1], 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('[gerarProximoNumeroOrcamento] Erro ao consultar Supabase, usando fallback local:', e);
+  }
+
+  var localKey = 'dailyCounter_' + ymd;
+  var localSeq = parseInt(localStorage.getItem(localKey) || '0', 10);
+  var nextSeq = Math.max(maxSeq, localSeq) + 1;
+  localStorage.setItem(localKey, String(nextSeq));
+
+  return prefix + ('000' + nextSeq).slice(-3);
+}
+
+/* Navbar Dinâmica e Padronizada */
 function injectNavbar(activePage) {
-  var header = document.createElement('header');
-  header.className = 'site-header navbar navbar-expand-md navbar-light no-print';
+  var header = document.getElementById('siteHeader') || document.querySelector('.site-header');
+  if (!header) {
+    header = document.createElement('header');
+    header.id = 'siteHeader';
+    header.className = 'site-header navbar navbar-expand-md navbar-light no-print';
+    document.body.insertBefore(header, document.body.firstChild);
+  }
   
   var isHome = activePage === 'home';
   var isRel = activePage === 'relatorio';
@@ -1160,23 +1331,357 @@ function injectNavbar(activePage) {
 
   header.innerHTML = `
     <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
-      <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
+      <a href="index.html" class="d-inline-flex align-items-center text-decoration-none">
+        <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
+      </a>
       <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-end" id="headerNav">
         <nav class="d-flex flex-column flex-md-row gap-2 ms-auto align-items-md-center">
-          <a class="btn ${isHome ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="index.html"><i class="fa-solid fa-house"></i> Menu</a>
-          <a class="btn ${isRel ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list"></i> Relatorio</a>
-          <a class="btn ${isCad ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="cadastro.html"><i class="fa-solid fa-plus"></i> Novo</a>
-          <a class="btn ${isProd ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="produtos.html"><i class="fa-solid fa-box-open"></i> Produtos</a>
-          <button class="btn btn-sm btn-soft-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+          <a class="btn ${isHome ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="index.html"><i class="fa-solid fa-house fa-fw"></i> Menu</a>
+          <a class="btn ${isRel ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list fa-fw"></i> Relatorio</a>
+          <a class="btn ${isCad ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="cadastro.html" id="navNovoBtn"><i class="fa-solid fa-plus fa-fw"></i> Novo</a>
+          <a class="btn ${isProd ? 'btn-soft-primary' : 'btn-soft-secondary'} btn-sm" href="produtos.html"><i class="fa-solid fa-box-open fa-fw"></i> Produtos</a>
+          <button class="btn btn-sm btn-soft-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket fa-fw"></i> Sair</button>
         </nav>
       </div>
     </div>
   `;
+}
 
-  document.body.insertBefore(header, document.body.firstChild);
+/* ── Integração com WhatsApp ───────────────────────────── */
+function gerarTextoWhatsApp(b) {
+  var status = b.status || (b.extras && b.extras.status) || 'Aberto';
+  var isPedido = (status === 'Aprovado' || status === 'Pago');
+  var docTipo = isPedido ? 'Pedido' : 'Orçamento';
+  
+  var c = b.client || {};
+  var clienteNome = b.clientName || c.name || 'Cliente';
+  var vl = b.valores || {};
+  var total = b.totalNumber != null ? b.totalNumber : (vl.total || 0);
+
+  var lines = [];
+  lines.push('💧 *HIDRO G BOMBAS SUBMERSAS*');
+  lines.push('Olá, *' + clienteNome + '*! Segue o resumo do seu *' + docTipo + ' #' + b.id + '*:');
+  lines.push('');
+  lines.push('📋 *ITENS:*');
+
+  var items = (b.items || []).filter(function(it) { return it.descricao || it.qtd > 0; });
+  if (items.length > 0) {
+    items.forEach(function(it, idx) {
+      var desc = it.descricao || it.description || 'Item';
+      var qtd = it.qtd || 1;
+      var tot = it.total ? currencyBR(it.total) : currencyBR((it.unit || it.unitario || 0) * qtd);
+      lines.push((idx + 1) + '. ' + qtd + 'x ' + desc + ' — ' + tot);
+    });
+  } else {
+    lines.push('• Conforme combinado');
+  }
+
+  lines.push('');
+  if (vl.subtotal && vl.subtotal !== total) lines.push('• Subtotal: ' + currencyBR(vl.subtotal));
+  if (vl.frete > 0) lines.push('• Frete (+): ' + currencyBR(vl.frete));
+  if (vl.desconto > 0) lines.push('• Desconto (-): ' + currencyBR(vl.desconto));
+  lines.push('💰 *VALOR TOTAL: ' + currencyBR(total) + '*');
+
+  var x = b.extras || {};
+  var infos = [];
+  if (x.pagamento) infos.push('💳 *Pagamento:* ' + x.pagamento);
+  if (x.prazo) infos.push('🚚 *Prazo de Entrega:* ' + x.prazo);
+  if (x.garantia) infos.push('🛡️ *Garantia:* ' + x.garantia);
+  if (x.validade && !isPedido) infos.push('⏳ *Validade da Proposta:* ' + x.validade);
+
+  if (infos.length > 0) {
+    lines.push('');
+    infos.forEach(function(info) { lines.push(info); });
+  }
+
+  lines.push('');
+  lines.push('Ficamos à disposição para qualquer dúvida!');
+  lines.push('📞 Tel: (17) 3216-5760 | WhatsApp: (17) 98132-4900');
+
+  return lines.join('\n');
+}
+
+function enviarWhatsAppOrcamento(b) {
+  var texto = gerarTextoWhatsApp(b);
+  var c = b.client || {};
+  var rawPhone = String(c.phone1 || c.phone2 || c.phone3 || '').replace(/\D/g, '');
+
+  var url = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(texto);
+  if (rawPhone.length >= 10) {
+    var ddiPhone = rawPhone.startsWith('55') ? rawPhone : ('55' + rawPhone);
+    url = 'https://api.whatsapp.com/send?phone=' + ddiPhone + '&text=' + encodeURIComponent(texto);
+  }
+
+  window.open(url, '_blank');
+}
+
+/* ── Compartilhar PDF (Web Share API com suporte nativo a WhatsApp / Fallback) ── */
+async function compartilharPDF(b) {
+  if (!b) {
+    showToast('Nenhum orçamento selecionado.', 'warning');
+    return;
+  }
+
+  try {
+    showToast('Preparando PDF para compartilhamento...', 'info');
+    var res = await gerarPDF(b, 'none');
+    if (!res || !res.file) {
+      if (res && res.doc) res.doc.save(res.filename);
+      enviarWhatsAppOrcamento(b);
+      showToast('PDF baixado! Anexe o arquivo na conversa.', 'info');
+      return;
+    }
+
+    var isPedido = (b.status === 'Aprovado' || b.status === 'Pago');
+    var docTipo = isPedido ? 'Pedido' : 'Orçamento';
+    var clienteNome = b.clientName || (b.client && b.client.name) || '';
+    var shareTitle = docTipo + ' #' + (b.id || '') + (clienteNome ? ' - ' + clienteNome : '');
+    var shareText = 'Olá' + (clienteNome ? ' ' + clienteNome : '') + '! Segue em anexo o PDF do seu ' + docTipo + ' #' + (b.id || '') + ' - Hidro G Bombas Submersas.';
+
+    var canShareFile = false;
+    try {
+      canShareFile = !!(navigator.canShare && navigator.canShare({ files: [res.file] }));
+    } catch (e) {
+      canShareFile = false;
+    }
+
+    if (canShareFile) {
+      await navigator.share({
+        title: shareTitle,
+        text: shareText,
+        files: [res.file]
+      });
+      showToast('Compartilhado com sucesso!', 'success');
+    } else {
+      // Fallback para navegadores sem suporte a compartilhamento de arquivos (ex: navegadores Desktop)
+      // Baixa o arquivo PDF e abre o WhatsApp com o texto pronto para receber o anexo
+      if (res.doc) res.doc.save(res.filename);
+      enviarWhatsAppOrcamento(b);
+      showToast('PDF baixado! Anexe o arquivo na conversa do WhatsApp.', 'info');
+    }
+  } catch (err) {
+    if (err && err.name === 'AbortError') {
+      // Usuário cancelou ou fechou a janela de compartilhamento nativo
+      return;
+    }
+    console.error('Erro ao compartilhar:', err);
+    showToast('Não foi possível compartilhar direto. Baixando PDF...', 'warning');
+    if (b) gerarPDF(b, true);
+  }
+}
+
+/* ── Modal Interativo de Opções de PDF (Imprimir / Baixar / WhatsApp / Recibo) ── */
+function openPdfModal(budget) {
+  if (!budget) {
+    showToast('Nenhum orçamento selecionado.', 'warning');
+    return;
+  }
+
+  var modalId = 'globalPdfModal';
+  var modalEl = document.getElementById(modalId);
+  if (!modalEl) {
+    modalEl = document.createElement('div');
+    modalEl.id = modalId;
+    modalEl.className = 'modal fade';
+    modalEl.setAttribute('tabindex', '-1');
+    modalEl.setAttribute('aria-hidden', 'true');
+    modalEl.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 470px;">
+        <div class="modal-content">
+          <div class="modal-header d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <div class="gpdf-icon-badge">
+                <i class="fa-solid fa-file-pdf"></i>
+              </div>
+              <div>
+                <h6 class="modal-title fw-bold mb-1" style="font-size: var(--text-base); color: var(--text);">Opções do Documento</h6>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span class="badge" id="gPdfDocBadge" style="font-size: var(--text-xs); font-weight: 600; background: var(--brand-50); color: var(--brand-700); border: 1px solid rgba(14,165,233,0.2);">Orçamento</span>
+                  <span class="badge" id="gPdfStatusBadge" style="font-size: var(--text-xs); font-weight: 600;">Aberto</span>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="gpdf-close-btn" data-bs-dismiss="modal" aria-label="Fechar">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="modal-body p-3 p-sm-4">
+            <!-- Resumo do Cliente e Total -->
+            <div class="gpdf-summary-card mb-3">
+              <div style="min-width: 0;">
+                <div class="text-muted d-flex align-items-center gap-1" style="font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">
+                  <i class="fa-regular fa-user"></i> Cliente
+                </div>
+                <strong class="text-truncate d-inline-block mt-1" style="max-width: 220px; font-size: var(--text-sm); color: var(--text);" id="gPdfModalClient">-</strong>
+              </div>
+              <div class="text-end">
+                <div class="text-muted d-flex align-items-center justify-content-end gap-1" style="font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">
+                  <i class="fa-solid fa-coins"></i> Total
+                </div>
+                <span class="fw-bold text-success tabular-nums mt-1 d-block" style="font-size: 1.15rem;" id="gPdfModalTotal">R$ 0,00</span>
+              </div>
+            </div>
+
+            <div class="text-muted mb-3 px-1 text-center" style="font-size: var(--text-xs); font-weight: 500;">
+              Selecione a ação desejada para este documento:
+            </div>
+
+            <div class="d-flex flex-column gap-2" id="gPdfOptionsList">
+              <!-- Botão 1: Visualizar / Imprimir -->
+              <button type="button" class="gpdf-action-card" id="gPdfBtnPrint">
+                <div class="gpdf-card-icon icon-print">
+                  <i class="fa-solid fa-print"></i>
+                </div>
+                <div class="gpdf-card-info">
+                  <div class="gpdf-card-title">Visualizar / Imprimir</div>
+                  <div class="gpdf-card-desc">Abre o PDF interativo em tela cheia pronto para impressão</div>
+                </div>
+                <i class="fa-solid fa-chevron-right gpdf-card-arrow"></i>
+              </button>
+
+              <!-- Botão 2: Baixar PDF -->
+              <button type="button" class="gpdf-action-card" id="gPdfBtnDownload">
+                <div class="gpdf-card-icon icon-download">
+                  <i class="fa-solid fa-file-arrow-down"></i>
+                </div>
+                <div class="gpdf-card-info">
+                  <div class="gpdf-card-title">Baixar Arquivo PDF</div>
+                  <div class="gpdf-card-desc">Salva o arquivo .pdf direto no seu celular ou computador</div>
+                </div>
+                <i class="fa-solid fa-chevron-right gpdf-card-arrow"></i>
+              </button>
+
+              <!-- Botão 3: Compartilhar via WhatsApp -->
+              <button type="button" class="gpdf-action-card" id="gPdfBtnShare">
+                <div class="gpdf-card-icon icon-share">
+                  <i class="fa-brands fa-whatsapp"></i>
+                </div>
+                <div class="gpdf-card-info">
+                  <div class="gpdf-card-title">Enviar pelo WhatsApp</div>
+                  <div class="gpdf-card-desc">Compartilha o documento PDF com mensagem na conversa</div>
+                </div>
+                <i class="fa-solid fa-chevron-right gpdf-card-arrow"></i>
+              </button>
+
+              <!-- Botão 4: Baixar Recibo (Opcional se Pago/Aprovado) -->
+              <button type="button" class="gpdf-action-card d-none" id="gPdfBtnRecibo">
+                <div class="gpdf-card-icon icon-receipt">
+                  <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div class="gpdf-card-info">
+                  <div class="gpdf-card-title">Baixar Recibo de Quitação</div>
+                  <div class="gpdf-card-desc">Emite o comprovante oficial de pagamento assinado em PDF</div>
+                </div>
+                <i class="fa-solid fa-chevron-right gpdf-card-arrow"></i>
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer border-top-0 pt-0 pb-3 px-4 d-flex justify-content-end">
+            <button type="button" class="btn btn-sm btn-soft-secondary px-3 py-1 rounded-pill" data-bs-dismiss="modal" style="font-size: var(--text-xs); font-weight: 600;">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalEl);
+  }
+
+  // Preenche informações no modal
+  var isPedido = (budget.status === 'Aprovado' || budget.status === 'Pago' || (budget.extras && (budget.extras.status === 'Aprovado' || budget.extras.status === 'Pago')));
+  var docTipo = isPedido ? 'Pedido' : 'Orçamento';
+  var docNum = budget.id || '-';
+
+  var docBadgeEl = document.getElementById('gPdfDocBadge');
+  if (docBadgeEl) {
+    docBadgeEl.textContent = docTipo + ' #' + docNum;
+  }
+
+  var st = budget.status || 'Aberto';
+  var statusBadgeEl = document.getElementById('gPdfStatusBadge');
+  if (statusBadgeEl) {
+    statusBadgeEl.textContent = st;
+    if (st === 'Aprovado') {
+      statusBadgeEl.style.backgroundColor = '#dcfce7';
+      statusBadgeEl.style.color = '#15803d';
+      statusBadgeEl.style.border = '1px solid #bbf7d0';
+    } else if (st === 'Pago') {
+      statusBadgeEl.style.backgroundColor = '#ecfdf5';
+      statusBadgeEl.style.color = '#047857';
+      statusBadgeEl.style.border = '1px solid #a7f3d0';
+    } else if (st === 'Recusado') {
+      statusBadgeEl.style.backgroundColor = '#fef2f2';
+      statusBadgeEl.style.color = '#b91c1c';
+      statusBadgeEl.style.border = '1px solid #fecaca';
+    } else {
+      statusBadgeEl.style.backgroundColor = '#fef9c3';
+      statusBadgeEl.style.color = '#854d0e';
+      statusBadgeEl.style.border = '1px solid #fde047';
+    }
+  }
+
+  var clientName = budget.clientName || (budget.client && budget.client.name) || 'Não informado';
+  var clientEl = document.getElementById('gPdfModalClient');
+  if (clientEl) clientEl.textContent = clientName;
+
+  var total = budget.totalNumber != null ? budget.totalNumber : ((budget.valores && budget.valores.total) || 0);
+  var totalEl = document.getElementById('gPdfModalTotal');
+  if (totalEl) totalEl.textContent = currencyBR(total);
+
+  // Recibo visível apenas para Pedidos Aprovados/Pagos
+  var reciboBtn = document.getElementById('gPdfBtnRecibo');
+  if (reciboBtn) {
+    if (isPedido) {
+      reciboBtn.classList.remove('d-none');
+    } else {
+      reciboBtn.classList.add('d-none');
+    }
+  }
+
+  var modalInstance = (window.bootstrap && bootstrap.Modal && bootstrap.Modal.getOrCreateInstance)
+    ? bootstrap.Modal.getOrCreateInstance(modalEl)
+    : new bootstrap.Modal(modalEl);
+
+  // Vincula botões substituindo nós para evitar listeners duplicados
+  var btnPrint = document.getElementById('gPdfBtnPrint');
+  var btnDownload = document.getElementById('gPdfBtnDownload');
+  var btnShare = document.getElementById('gPdfBtnShare');
+
+  var newBtnPrint = btnPrint.cloneNode(true);
+  btnPrint.parentNode.replaceChild(newBtnPrint, btnPrint);
+
+  var newBtnDownload = btnDownload.cloneNode(true);
+  btnDownload.parentNode.replaceChild(newBtnDownload, btnDownload);
+
+  var newBtnShare = btnShare.cloneNode(true);
+  btnShare.parentNode.replaceChild(newBtnShare, btnShare);
+
+  newBtnPrint.addEventListener('click', function() {
+    modalInstance.hide();
+    gerarPDF(budget, false);
+  });
+
+  newBtnDownload.addEventListener('click', function() {
+    modalInstance.hide();
+    gerarPDF(budget, true);
+  });
+
+  newBtnShare.addEventListener('click', function() {
+    modalInstance.hide();
+    compartilharPDF(budget);
+  });
+
+  if (reciboBtn) {
+    var newBtnRecibo = reciboBtn.cloneNode(true);
+    reciboBtn.parentNode.replaceChild(newBtnRecibo, reciboBtn);
+    newBtnRecibo.addEventListener('click', function() {
+      modalInstance.hide();
+      gerarReciboPDF(budget, true);
+    });
+  }
+
+  modalInstance.show();
 }
 
 /* Exportação CSV */

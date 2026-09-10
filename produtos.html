@@ -7,8 +7,8 @@
   <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
-  <link rel="manifest" href="manifest.json?v=6">
+  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="manifest" href="manifest.json?v=13">
   <meta name="theme-color" content="#ffffff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -36,8 +36,8 @@
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
       padding: 24px; width: 100%; max-width: 400px;
       opacity: 0;
-      transform: scale(0.92) translateY(10px);
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+      transform: scale(0.95) translateY(8px);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
     }
     #prodModal.show #prodModalBox {
       opacity: 1;
@@ -56,23 +56,7 @@
 </head>
 <body>
 
-<header class="site-header navbar navbar-expand-md navbar-light no-print">
-  <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
-    <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
-    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end" id="headerNav">
-      <nav class="d-flex flex-column flex-md-row gap-2 ms-auto align-items-md-center">
-        <a class="btn btn-soft-secondary btn-sm" href="index.html"><i class="fa-solid fa-house fa-fw"></i> Menu</a>
-        <a class="btn btn-soft-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list fa-fw"></i> Relatorio</a>
-        <a class="btn btn-soft-secondary btn-sm" href="cadastro.html"><i class="fa-solid fa-plus fa-fw"></i> Novo</a>
-        <a class="btn btn-soft-primary btn-sm" href="produtos.html"><i class="fa-solid fa-box-open fa-fw"></i> Produtos</a>
-        <button class="btn btn-sm btn-soft-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket fa-fw"></i> Sair</button>
-      </nav>
-    </div>
-  </div>
-</header>
+<header id="siteHeader" class="site-header navbar navbar-expand-md navbar-light no-print"></header>
 
 <div class="wrap">
   <div class="card border-0 shadow-sm">
@@ -152,7 +136,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="utils.js?v=6"></script>
+<script src="utils.js?v=13"></script>
 <script>
 var _all      = [];   // todos os produtos
 var _filtered = [];   // após busca
@@ -336,7 +320,7 @@ document.getElementById('modalSaveBtn').addEventListener('click', async function
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
 
   try {
-    var prod = { id: id || crypto.randomUUID(), name: name, price: price };
+    var prod = { id: id || generateUUID(), name: name, price: price };
     await ProductDB.save(prod);
 
     if (id) {
@@ -366,9 +350,12 @@ document.getElementById('modalSaveBtn').addEventListener('click', async function
 
 document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
 
-// Fechar ao clicar fora
+// Fechar ao clicar fora ou pressionar Esc
 document.getElementById('prodModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
 });
 
 // Enter salva
@@ -397,6 +384,7 @@ document.getElementById('btnNovoProd').addEventListener('click', function() {
 
 /* ── Init ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async function() {
+  injectNavbar('produtos');
   var user = await checkAuth();
   if (!user) return;
 

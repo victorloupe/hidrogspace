@@ -8,19 +8,19 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
-  <link rel="manifest" href="manifest.json?v=6">
+  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="manifest" href="manifest.json?v=13">
   <meta name="theme-color" content="#ffffff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon-192.png">
   <style>
-    #conteudoOrcamento .form-label { font-size:.82rem; color:#475569; margin-bottom:2px; display:block; }
-    .row-remove-btn { background:none; border:none; color:#dc2626; cursor:pointer; padding:0 6px; font-size:1rem; opacity:.55; line-height:1; }
+    #conteudoOrcamento .form-label { font-size: var(--text-xs); color: var(--text-muted); font-weight: 600; margin-bottom: 3px; display: block; text-transform: uppercase; letter-spacing: 0.04em; }
+    .row-remove-btn { background:none; border:none; color:#dc2626; cursor:pointer; padding:0 6px; font-size: var(--text-base); opacity:.55; line-height:1; }
     .row-remove-btn:hover { opacity:1; }
-    .form-control:focus { border-color:var(--brand); box-shadow:0 0 0 .15rem rgba(14,165,233,.2); }
-    #numeroOrcamento, #dataHoje { border:none !important; box-shadow:none !important; background:transparent; font-size:1rem; }
+    .form-control:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(14,165,233,.15); }
+    #numeroOrcamento, #dataHoje { border:none !important; box-shadow:none !important; background:transparent; font-size: var(--text-base); font-weight: 700; }
 
     /* ── Autocomplete de Produtos ────────────────────── */
     #prodDropdown {
@@ -28,41 +28,53 @@
       background: #fff;
       border: 1px solid #e2e8f0;
       border-radius: 10px;
-      box-shadow: 0 8px 28px rgba(0,0,0,.13);
+      box-shadow: var(--shadow-lg);
       max-height: 220px; overflow-y: auto;
-      display: none; min-width: 240px;
+      min-width: 240px;
+      display: none;
+    }
+    #prodDropdown.show {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
     .prod-item {
       padding: 8px 12px; cursor: pointer;
       display: flex; justify-content: space-between; align-items: center;
-      font-size: .85rem; gap: 8px; border-bottom: 1px solid #f1f5f9;
+      font-size: var(--text-sm); gap: 8px; border-bottom: 1px solid #f1f5f9;
     }
     .prod-item:last-child { border-bottom: none; }
     .prod-item:hover, .prod-item.pi-active { background: #f0f9ff; }
     .prod-item .pi-name { flex:1; color:#0f172a; }
-    .prod-item .pi-price { color:#0ea5e9; font-weight:600; white-space:nowrap; font-size:.8rem; }
+    .prod-item .pi-price { color:#0ea5e9; font-weight:600; white-space:nowrap; font-size: var(--text-xs); }
     .prod-item.pi-add { color:#0ea5e9; font-style:italic; gap:6px; }
     .prod-item.pi-add:hover { background:#f0f9ff; }
+
+    /* ── Reordenar itens (arrastar) ──────────────────── */
+    .row-handle-cell { white-space: nowrap; }
+    .drag-handle {
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #cbd5e1; cursor: grab; padding: 2px 3px; margin-right: 1px;
+      font-size: var(--text-sm); border-radius: 6px; touch-action: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .drag-handle:hover { color: var(--brand); background: var(--brand-50); }
+    .drag-handle:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+    .drag-handle:active { cursor: grabbing; }
+    #itemsTbody tr.row-dragging > td { background: var(--brand-50) !important; }
+    #itemsTbody tr.row-dragging { box-shadow: var(--shadow-md); }
+    #itemsTbody tr.row-dragging .drag-handle { color: var(--brand); cursor: grabbing; }
+    #itemsTbody tr.row-moved > td { animation: rowMoved .5s ease; }
+    @keyframes rowMoved { from { background: var(--brand-50); } to { background: transparent; } }
+    body.reordering-rows { -webkit-user-select: none; user-select: none; }
+    @media (max-width: 576px) {
+      .drag-handle { font-size: var(--text-base); padding: 6px 5px; color: #94a3b8; min-width: 26px; min-height: 30px; }
+    }
   </style>
 </head>
 <body>
-<header class="site-header navbar navbar-expand-md navbar-light no-print">
-  <div class="container-fluid p-0 d-flex align-items-center justify-content-between flex-wrap flex-md-nowrap">
-    <img src="logohidrog.png" alt="Hidro G" style="height:50px;">
-    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#headerNav" aria-controls="headerNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end" id="headerNav">
-      <nav class="d-flex flex-column flex-md-row gap-2 ms-auto align-items-md-center">
-        <a class="btn btn-soft-secondary btn-sm" href="index.html"><i class="fa-solid fa-house fa-fw"></i> Menu</a>
-        <a class="btn btn-soft-secondary btn-sm" href="relatorio.html"><i class="fa-solid fa-table-list fa-fw"></i> Relatorio</a>
-        <a class="btn btn-soft-primary btn-sm" href="cadastro.html"><i class="fa-solid fa-plus fa-fw"></i> Novo</a>
-        <a class="btn btn-soft-secondary btn-sm" href="produtos.html"><i class="fa-solid fa-box-open fa-fw"></i> Produtos</a>
-        <button class="btn btn-sm btn-soft-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket fa-fw"></i> Sair</button>
-      </nav>
-    </div>
-  </div>
-</header>
+<header id="siteHeader" class="site-header navbar navbar-expand-md navbar-light no-print"></header>
 
 <div class="wrap">
 <div class="card border-0 shadow-sm">
@@ -71,8 +83,8 @@
 
   <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2 mb-3 gap-2" id="orcamentoHeader">
     <div class="d-flex align-items-center gap-2 flex-grow-1 flex-wrap">
-      <span class="brand fw-bold" id="labelOrcamentoPedido">Orçamento</span>
-      <input id="numeroOrcamento" class="form-control" placeholder="Nº do orçamento" style="width:140px;">
+      <h1 class="brand fw-bold mb-0 d-inline-block" id="labelOrcamentoPedido" style="font-size: var(--text-2xl); letter-spacing: -0.02em;">Orçamento</h1>
+      <input id="numeroOrcamento" class="form-control" placeholder="Nº do orçamento" style="width:150px;">
     </div>
     <div class="d-flex align-items-center gap-1">
       <input id="dataHoje" class="form-control date-input" placeholder="Data" readonly style="width:120px;text-align:right;">
@@ -88,18 +100,18 @@
         <img src="orcamento.png" alt="Logo Hidro G" class="img-fluid" style="max-height:110px;" id="logoImg">
         <div class="logo-actions mt-1 no-print">
           <input type="file" id="logoUploadInput" accept="image/*" class="d-none">
-          <button type="button" class="btn btn-sm btn-soft-secondary py-1 px-2" style="font-size: 0.75rem;" onclick="document.getElementById('logoUploadInput').click()">
+          <button type="button" class="btn btn-sm btn-soft-secondary py-1 px-2" style="font-size: var(--text-xs);" onclick="document.getElementById('logoUploadInput').click()">
             <i class="fa-solid fa-image me-1"></i> Alterar Logo
           </button>
-          <button type="button" id="btnResetLogo" class="btn btn-sm btn-soft-danger py-1 px-2 d-none" style="font-size: 0.75rem;" onclick="restaurarLogoPadrao()">
+          <button type="button" id="btnResetLogo" class="btn btn-sm btn-soft-danger py-1 px-2 d-none" style="font-size: var(--text-xs);" onclick="restaurarLogoPadrao()">
             <i class="fa-solid fa-trash me-1"></i> Restaurar
           </button>
         </div>
       </div>
     </div>
     <div class="col-md-5 text-md-end">
-      <p class="brand fw-bold mb-0" style="font-size:1.05rem;">HIDRO G BOMBAS SUBMERSAS LTDA.</p>
-      <small class="text-muted lh-lg">
+      <p class="brand fw-bold mb-0" style="font-size: var(--text-base);">HIDRO G BOMBAS SUBMERSAS LTDA.</p>
+      <small class="text-muted lh-lg" style="font-size: var(--text-xs);">
         CNPJ: 12.835.772/0001-22<br>
         Rua Feres Bucater 1461 - Jd. Sao Marco<br>
         Sao Jose do Rio Preto - SP<br>
@@ -134,7 +146,12 @@
   </div>
 
   <div class="section-header d-flex justify-content-between align-items-center">
-    <span id="labelItensOrcamentoPedido">Itens do Orçamento</span>
+    <span>
+      <span id="labelItensOrcamentoPedido">Itens do Orçamento</span>
+      <small class="text-muted fw-normal no-print d-none d-sm-inline ms-2" style="font-size: var(--text-xs);">
+        <i class="fa-solid fa-grip-vertical"></i> arraste para reordenar
+      </small>
+    </span>
     <button class="btn btn-sm btn-soft-primary no-print" id="btnAddRow" type="button">
       <i class="fa-solid fa-plus"></i> Adicionar item
     </button>
@@ -143,7 +160,7 @@
     <table class="table table-bordered table-sm align-middle mb-2" id="itemsTable">
       <thead class="table-light">
         <tr>
-          <th style="width:44px">#</th>
+          <th style="width:62px" class="text-center">#</th>
           <th>Descrição</th>
           <th style="width:80px">Qtd</th>
           <th style="width:140px">Valor Unit.</th>
@@ -159,8 +176,8 @@
     <div class="col-md-4"><label class="form-label">Frete</label><input id="frete" class="form-control" placeholder="R$ 0,00"></div>
     <div class="col-md-4"><label class="form-label">Desconto</label><input id="desconto" class="form-control" placeholder="R$ 0,00"></div>
     <div class="col-md-4 text-end">
-      <p class="mb-1 text-muted" style="font-size:.9rem">Sub Total: <strong id="subTotal">R$ 0,00</strong></p>
-      <p class="mb-0 fw-bold" style="font-size:1.25rem">Total: <span id="totalValue">R$ 0,00</span></p>
+      <p class="mb-1 text-muted" style="font-size: var(--text-sm);">Sub Total: <strong id="subTotal">R$ 0,00</strong></p>
+      <p class="mb-0 fw-bold" style="font-size: var(--text-xl);">Total: <span id="totalValue">R$ 0,00</span></p>
     </div>
   </div>
 
@@ -192,7 +209,7 @@
     </div>
   </div>
   <div id="installmentsWrapper" class="row g-2 mb-3">
-    <div class="col-12 text-center py-2 text-muted" id="noInstallmentsMsg" style="font-size: .82rem;">
+    <div class="col-12 text-center py-2 text-muted" id="noInstallmentsMsg" style="font-size: var(--text-sm);">
       Nenhuma parcela gerada. Selecione a quantidade e clique em "Gerar".
     </div>
   </div>
@@ -201,10 +218,10 @@
     <div class="d-flex align-items-center">
       <input type="hidden" id="budgetStatus" value="Aberto">
       <div class="dropdown" id="statusDropdownContainer">
-        <button class="btn btn-sm fw-bold d-flex align-items-center gap-1" type="button" id="statusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--brand-700); background-color: var(--brand-50); border-radius: 8px; padding: .25rem .5rem; height: 31px; font-size: .88rem; min-width: 125px; justify-content: space-between; border: 1px solid transparent !important;">
-          <span><i class="fa-regular fa-hourglass-half"></i> Aberto</span> <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.7;"></i>
+        <button class="btn btn-sm fw-bold d-flex align-items-center gap-1" type="button" id="statusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--brand-700); background-color: var(--brand-50); border-radius: 8px; padding: .25rem .75rem; height: 32px; font-size: var(--text-sm); min-width: 125px; justify-content: space-between; border: 1px solid transparent !important;">
+          <span><i class="fa-regular fa-hourglass-half"></i> Aberto</span> <i class="fa-solid fa-chevron-down ms-1" style="font-size: var(--text-xs); opacity: 0.7;"></i>
         </button>
-        <ul class="dropdown-menu shadow border-brand-50" aria-labelledby="statusDropdownBtn" style="border-radius: 8px; font-size: .85rem; min-width: 125px;">
+        <ul class="dropdown-menu shadow border-brand-50" aria-labelledby="statusDropdownBtn" style="border-radius: 8px; font-size: var(--text-sm); min-width: 125px;">
           <li><a class="dropdown-item fw-semibold d-flex align-items-center gap-2" href="#" data-value="Aberto" style="color: var(--brand-700);"><i class="fa-regular fa-hourglass-half"></i> Aberto</a></li>
           <li><a class="dropdown-item fw-semibold text-success d-flex align-items-center gap-2" href="#" data-value="Aprovado"><i class="fa-solid fa-circle-check"></i> Aprovado</a></li>
           <li><a class="dropdown-item fw-semibold text-danger d-flex align-items-center gap-2" href="#" data-value="Recusado"><i class="fa-solid fa-circle-xmark"></i> Recusado</a></li>
@@ -214,9 +231,10 @@
     </div>
     <div class="d-flex gap-2 flex-wrap">
       <button class="btn btn-soft-secondary" id="novoOrcamento" type="button"><i class="fa-solid fa-file-circle-plus"></i> <span class="d-none d-sm-inline">Novo</span></button>
-      <button class="btn btn-soft-primary" id="btnSalvar" type="button"><i class="fa-solid fa-floppy-disk"></i> <span class="d-none d-sm-inline" id="btnSalvarText">Salvar</span></button>
+      <button class="btn btn-soft-primary" id="btnSalvar" type="button" title="Salvar (Ctrl+S)"><i class="fa-solid fa-floppy-disk"></i> <span class="d-none d-sm-inline" id="btnSalvarText">Salvar</span></button>
+      <button class="btn btn-soft-success" id="btnCompartilhar" type="button" title="Compartilhar PDF (WhatsApp)"><i class="fa-solid fa-share-nodes"></i> <span class="d-none d-sm-inline">Compartilhar</span></button>
       <button class="btn btn-soft-danger" id="savePdfButton" type="button"><i class="fa-solid fa-file-pdf"></i> <span class="d-none d-sm-inline">Baixar PDF</span></button>
-      <button class="btn btn-soft-secondary" id="printButton" type="button"><i class="fa-solid fa-print"></i> <span class="d-none d-sm-inline">Imprimir PDF</span></button>
+      <button class="btn btn-soft-secondary" id="printButton" type="button" title="Imprimir ou Baixar PDF"><i class="fa-solid fa-print"></i> <span class="d-none d-sm-inline">Imprimir / PDF</span></button>
       <button class="btn btn-soft-success d-none" id="reciboButton" type="button"><i class="fa-solid fa-receipt"></i> <span class="d-none d-sm-inline">Baixar Recibo</span></button>
     </div>
   </div>
@@ -237,16 +255,16 @@
       <i class="fa-solid fa-box-open" style="color:#0ea5e9; margin-right:6px;"></i>Novo Produto
     </h6>
     <div class="mb-3">
-      <label style="font-size:.82rem; color:#475569; display:block; margin-bottom:4px;">Nome do produto</label>
+      <label style="font-size: var(--text-xs); color: var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.03em; font-weight:600;">Nome do produto</label>
       <input id="prodModalName" class="form-control" placeholder="Ex.: Bomba Submersa 1HP">
     </div>
     <div class="mb-4">
-      <label style="font-size:.82rem; color:#475569; display:block; margin-bottom:4px;">Preço unitário</label>
+      <label style="font-size: var(--text-xs); color: var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.03em; font-weight:600;">Preço unitário</label>
       <input id="prodModalPrice" class="form-control" placeholder="R$ 0,00" inputmode="numeric">
     </div>
     <div style="display:flex; gap:12px;">
       <button class="btn btn-soft-secondary flex-fill" id="prodModalCancel">Cancelar</button>
-      <button class="btn btn-brand text-white flex-fill" id="prodModalSave"><i class="fa-solid fa-floppy-disk"></i> Salvar produto</button>
+      <button class="btn btn-primary flex-fill" id="prodModalSave"><i class="fa-solid fa-floppy-disk"></i> Salvar produto</button>
     </div>
   </div>
 </div>
@@ -264,15 +282,14 @@
 
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="utils.js?v=6"></script>
+<script src="utils.js?v=13"></script>
 <script>
 var $id = function(id) { return document.getElementById(id); };
 
@@ -282,21 +299,19 @@ function setVal(id, v) { var el = $id(id); if (el) el.value = (v != null ? v : '
 function getVal(id) { return ($id(id) ? $id(id).value : '').trim(); }
 function onlyDigits(s) { return String(s || '').replace(/\D/g, ''); }
 
-/* Numeracao diaria */
-function gerarNumeroDiario() {
-  var n = new Date();
-  var ymd = n.getFullYear() + ('0'+(n.getMonth()+1)).slice(-2) + ('0'+n.getDate()).slice(-2);
-  var key = 'dailyCounter_' + ymd;
-  var seq = parseInt(localStorage.getItem(key) || '0', 10) + 1;
-  localStorage.setItem(key, String(seq));
-  return ymd + '-' + ('000'+seq).slice(-3);
+/* Numeracao diaria segura (consulta Supabase para evitar sobrescrita) */
+async function gerarNumeroDiario() {
+  return await gerarProximoNumeroOrcamento();
 }
 
 /* Linhas dinamicas */
 function criarLinha(num) {
   var tr = document.createElement('tr');
   tr.innerHTML =
-    '<td class="text-center row-num text-muted fw-bold" style="font-size:.82rem">' + num + '</td>' +
+    '<td class="text-center row-handle-cell text-muted fw-bold" style="font-size: var(--text-sm);">' +
+      '<span class="drag-handle no-print" role="button" tabindex="0" aria-label="Arrastar para reordenar item" title="Arraste para reordenar (ou use as setas do teclado)"><i class="fa-solid fa-grip-vertical"></i></span>' +
+      '<span class="row-num">' + num + '</span>' +
+    '</td>' +
     '<td><input class="form-control form-control-sm row-desc" type="text" autocomplete="off"></td>' +
     '<td><input class="form-control form-control-sm row-qtd" type="number" value="0" min="0" step="0.001"></td>' +
     '<td><input class="form-control form-control-sm row-unit" placeholder="R$ 0,00"></td>' +
@@ -320,6 +335,7 @@ function criarLinha(num) {
   descEl.addEventListener('keydown', function(e) { handleProdKey(e, tr); });
 
   enableSwipeToDelete(tr);
+  enableRowDrag(tr);
   return tr;
 }
 
@@ -335,15 +351,18 @@ function addRow() {
   tbody.appendChild(criarLinha(tbody.rows.length + 1));
 }
 
+function renumerarLinhas() {
+  $id('itemsTbody').querySelectorAll('tr').forEach(function(tr, i) {
+    var n = tr.querySelector('.row-num');
+    if (n) n.textContent = i + 1;
+  });
+}
+
 function removerLinha(btn) {
   var tbody = $id('itemsTbody');
   if (tbody.rows.length <= 1) return;
   btn.closest('tr').remove();
-  var rows = tbody.querySelectorAll('tr');
-  rows.forEach(function(tr, i) {
-    var n = tr.querySelector('.row-num');
-    if (n) n.textContent = i + 1;
-  });
+  renumerarLinhas();
   recalc();
 }
 
@@ -360,11 +379,7 @@ function removerLinhaDirect(tr) {
     return;
   }
   tr.remove();
-  var rows = tbody.querySelectorAll('tr');
-  rows.forEach(function(r, i) {
-    var n = r.querySelector('.row-num');
-    if (n) n.textContent = i + 1;
-  });
+  renumerarLinhas();
   recalc();
 }
 
@@ -376,13 +391,15 @@ function enableSwipeToDelete(tr) {
   
   tr.addEventListener('touchstart', function(e) {
     if (window.innerWidth > 576) return;
+    if (_dragRow) return;
+    if (e.target && e.target.closest && e.target.closest('.drag-handle')) return;
     startX = e.touches[0].clientX;
     tr.style.transition = 'none';
     isSwiping = true;
   }, { passive: true });
   
   tr.addEventListener('touchmove', function(e) {
-    if (!isSwiping) return;
+    if (!isSwiping || _dragRow) return;
     currentX = e.touches[0].clientX;
     var diffX = currentX - startX;
     
@@ -418,6 +435,127 @@ function enableSwipeToDelete(tr) {
       tr.style.transform = 'translateX(0)';
       tr.style.opacity = '1';
     }
+  });
+}
+
+/* ── Reordenacao das linhas por arrastar ──────────────
+   Funciona no desktop (mouse), no celular (toque na alca)
+   e pelo teclado (setas cima/baixo com a alca focada).    */
+var _dragRow = null;
+
+function moverLinha(tr, delta) {
+  var tbody = $id('itemsTbody');
+  if (!tr || !tbody) return false;
+  var ref = delta < 0 ? tr.previousElementSibling
+                      : (tr.nextElementSibling ? tr.nextElementSibling.nextElementSibling : null);
+  if (delta < 0 && !ref) return false;
+  if (delta > 0 && !tr.nextElementSibling) return false;
+  tbody.insertBefore(tr, ref);
+  renumerarLinhas();
+  destacarLinha(tr);
+  return true;
+}
+
+function destacarLinha(tr) {
+  tr.classList.remove('row-moved');
+  void tr.offsetWidth; // reinicia a animacao
+  tr.classList.add('row-moved');
+  setTimeout(function() { tr.classList.remove('row-moved'); }, 520);
+}
+
+function linhaAlvoDrop(y) {
+  var rows = $id('itemsTbody').querySelectorAll('tr');
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i] === _dragRow) continue;
+    var box = rows[i].getBoundingClientRect();
+    if (y < box.top + box.height / 2) return rows[i];
+  }
+  return null;
+}
+
+function dragStart(tr, y) {
+  _dragRow = tr;
+  tr.classList.add('row-dragging');
+  document.body.classList.add('reordering-rows');
+  if (typeof hideProdDropdown === 'function') hideProdDropdown();
+  dragMove(y);
+}
+
+function dragMove(y) {
+  if (!_dragRow) return;
+  var tbody = $id('itemsTbody');
+
+  // rola a pagina quando o dedo/mouse chega perto das bordas
+  var margem = 70;
+  if (y < margem) window.scrollBy(0, -14);
+  else if (y > window.innerHeight - margem) window.scrollBy(0, 14);
+
+  var ref = linhaAlvoDrop(y);
+  if (ref === _dragRow) return;
+  if (ref && ref.previousElementSibling === _dragRow) return;
+  if (!ref && tbody.lastElementChild === _dragRow) return;
+  tbody.insertBefore(_dragRow, ref);
+  renumerarLinhas();
+}
+
+function dragEnd() {
+  if (!_dragRow) return;
+  var tr = _dragRow;
+  _dragRow = null;
+  tr.classList.remove('row-dragging');
+  document.body.classList.remove('reordering-rows');
+  destacarLinha(tr);
+  renumerarLinhas();
+  recalc();
+}
+
+function enableRowDrag(tr) {
+  var handle = tr.querySelector('.drag-handle');
+  if (!handle) return;
+  var moveEvt = 'pointermove', endEvt = 'pointerup';
+
+  function onMove(e) {
+    if (e.cancelable) e.preventDefault();
+    dragMove(e.touches ? e.touches[0].clientY : e.clientY);
+  }
+
+  function onEnd() {
+    document.removeEventListener(moveEvt, onMove, { passive: false });
+    document.removeEventListener(endEvt, onEnd);
+    document.removeEventListener('pointercancel', onEnd);
+    document.removeEventListener('touchcancel', onEnd);
+    dragEnd();
+  }
+
+  function onStart(e) {
+    if (_dragRow) return;
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.cancelable) e.preventDefault();
+    if (e.type === 'pointerdown')      { moveEvt = 'pointermove'; endEvt = 'pointerup'; }
+    else if (e.type === 'touchstart')  { moveEvt = 'touchmove';   endEvt = 'touchend'; }
+    else                               { moveEvt = 'mousemove';   endEvt = 'mouseup'; }
+    document.addEventListener(moveEvt, onMove, { passive: false });
+    document.addEventListener(endEvt, onEnd);
+    document.addEventListener('pointercancel', onEnd);
+    document.addEventListener('touchcancel', onEnd);
+    dragStart(tr, e.touches ? e.touches[0].clientY : e.clientY);
+  }
+
+  if (window.PointerEvent) {
+    handle.addEventListener('pointerdown', onStart);
+  } else {
+    handle.addEventListener('mousedown', onStart);
+    handle.addEventListener('touchstart', onStart, { passive: false });
+  }
+
+  handle.addEventListener('keydown', function(e) {
+    var delta = 0;
+    if (e.key === 'ArrowUp')   delta = -1;
+    if (e.key === 'ArrowDown') delta = 1;
+    if (!delta) return;
+    e.preventDefault();
+    if (moverLinha(tr, delta)) { recalc(); handle.focus(); }
   });
 }
 
@@ -505,7 +643,7 @@ function renderInstallments() {
   
   if (_parcelas.length === 0) {
     wrapper.innerHTML = `
-      <div class="col-12 text-center py-2 text-muted" id="noInstallmentsMsg" style="font-size: .82rem;">
+      <div class="col-12 text-center py-2 text-muted" id="noInstallmentsMsg" style="font-size: var(--text-sm);">
         Nenhuma parcela gerada. Selecione a quantidade e clique em "Gerar".
       </div>
     `;
@@ -528,7 +666,7 @@ function renderInstallments() {
       badgeHtml = `<span class="badge ${st.class} rounded-pill"><i class="fa-solid fa-circle-check"></i> Pago</span>`;
       var methodStr = p.paymentMethod || 'Não informada';
       var dateStr = p.paymentDate ? fmtBR(p.paymentDate) : 'Não informada';
-      detailsHtml = `<div class="text-success fw-semibold mt-1" style="font-size: .7rem; line-height: 1.1;">
+      detailsHtml = `<div class="text-success fw-semibold mt-1" style="font-size: var(--text-xs); line-height: 1.2;">
                        <i class="fa-solid fa-receipt"></i> ${methodStr} em ${dateStr}
                      </div>`;
       selectHtml = '';
@@ -552,7 +690,7 @@ function renderInstallments() {
       selectHtml = `
         <div class="form-check mb-0">
           <input class="form-check-input select-to-pay" type="checkbox" id="sel_${idx}" data-idx="${idx}">
-          <label class="form-check-label fw-semibold text-muted" for="sel_${idx}" style="font-size: .75rem; cursor: pointer;">Selecionar</label>
+          <label class="form-check-label fw-semibold text-muted" for="sel_${idx}" style="font-size: var(--text-xs); cursor: pointer;">Selecionar</label>
         </div>
       `;
     }
@@ -560,15 +698,15 @@ function renderInstallments() {
     col.innerHTML = `
       <div class="card p-2 border-brand-50" style="background-color: var(--brand-50); border-radius: 8px;">
         <div class="d-flex align-items-center justify-content-between mb-1">
-          <span class="fw-bold" style="font-size: .8rem; color: var(--brand-700);">${p.number}ª Parcela</span>
+          <span class="fw-bold" style="font-size: var(--text-sm); color: var(--brand-700);">${p.number}ª Parcela</span>
           ${selectHtml}
         </div>
         <div class="d-flex gap-1 mb-1">
-          <input type="text" class="form-control form-control-sm val-input" value="${moneyMask(String(Math.round(p.value * 100)))}" placeholder="Valor" style="font-size: .78rem;" ${p.paid ? 'disabled' : ''}>
-          <input type="date" class="form-control form-control-sm due-input" value="${p.due}" style="font-size: .78rem;" ${p.paid ? 'disabled' : ''}>
+          <input type="text" class="form-control form-control-sm val-input" value="${moneyMask(String(Math.round(p.value * 100)))}" placeholder="Valor" style="font-size: var(--text-xs);" ${p.paid ? 'disabled' : ''}>
+          <input type="date" class="form-control form-control-sm due-input" value="${p.due}" style="font-size: var(--text-xs);" ${p.paid ? 'disabled' : ''}>
         </div>
         <div class="d-flex align-items-center justify-content-between">
-          <span class="text-muted fw-semibold" style="font-size: .7rem;">Status:</span>
+          <span class="text-muted fw-semibold" style="font-size: var(--text-xs);">Status:</span>
           ${badgeHtml}
         </div>
         ${detailsHtml}
@@ -783,7 +921,7 @@ async function saveBudget() {
 }
 
 /* Reset */
-function resetForm() {
+async function resetForm() {
   try {
     localStorage.removeItem('currentBudgetId');
     localStorage.removeItem('budgetDraft');
@@ -797,7 +935,7 @@ function resetForm() {
   setVal('desconto',moneyMask('0'));
   $id('subTotal').innerText   = currencyBR(0);
   $id('totalValue').innerText = currencyBR(0);
-  setVal('numeroOrcamento', gerarNumeroDiario());
+  setVal('numeroOrcamento', await gerarNumeroDiario());
   setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
   
   setVal('budgetStatus', 'Aberto');
@@ -814,6 +952,7 @@ function resetForm() {
    INIT
    ============================================================ */
 document.addEventListener('DOMContentLoaded', async function() {
+  injectNavbar('cadastro');
   var user = await checkAuth();
   if (!user) return;
 
@@ -891,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   $id('btnCalendar').addEventListener('click', function() { fp.open(); });
 
   buildRows(3);
-  setVal('numeroOrcamento', gerarNumeroDiario());
+  setVal('numeroOrcamento', await gerarNumeroDiario());
   setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
   setVal('frete',    moneyMask('0'));
   setVal('desconto', moneyMask('0'));
@@ -940,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var budget = await BudgetDB.get(duplicateId);
     if (budget) {
       loadBudgetIntoForm(budget);
-      setVal('numeroOrcamento', gerarNumeroDiario());
+      setVal('numeroOrcamento', await gerarNumeroDiario());
       setVal('dataHoje', new Date().toLocaleDateString('pt-BR'));
       recalc();
       sysAlert('Dados do orçamento #' + duplicateId + ' copiados com sucesso! O número do orçamento foi atualizado automaticamente.');
@@ -961,25 +1100,62 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
-  /* Mascara CNPJ/CPF: inicia como CNPJ; reformata no blur */
-  $('#clientCNPJ').mask('00.000.000/0000-00').on('blur', function() {
-    var raw = onlyDigits($(this).val());
-    if (raw.length === 11) {
-      $(this).unmask().val(raw).mask('000.000.000-00');
+  /* Máscaras em JavaScript nativo puro (sem jQuery) */
+  function maskCpfCnpj(v) {
+    var digits = onlyDigits(v).slice(0, 14);
+    if (digits.length <= 11) {
+      return digits
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      return digits
+        .replace(/^(\d{2})(\d)/, '$1.$2')
+        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/\.(\d{3})(\d)/, '.$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
     }
-    if (raw.length === 11 || raw.length === 14) buscarDocumento();
-  });
+  }
 
-  $('#clientCEP').mask('00000-000')
-    .on('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); buscarCEP(); } })
-    .on('blur', function() { if (onlyDigits($(this).val()).length >= 8) buscarCEP(); });
+  function maskCEP(v) {
+    var digits = onlyDigits(v).slice(0, 8);
+    if (digits.length > 5) {
+      return digits.replace(/^(\d{5})(\d)/, '$1-$2');
+    }
+    return digits;
+  }
 
-  var phoneMask = function(v) {
-    return onlyDigits(v).length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
-  };
-  $('#clientPhone1,#clientPhone2,#clientPhone3').mask(phoneMask, {
-    onKeyPress: function(v, e, f, o) { f.mask(phoneMask(v), o); }
-  });
+  var cnpjInput = $id('clientCNPJ');
+  if (cnpjInput) {
+    cnpjInput.addEventListener('input', function() {
+      this.value = maskCpfCnpj(this.value);
+    });
+    cnpjInput.addEventListener('blur', function() {
+      this.value = maskCpfCnpj(this.value);
+      var raw = onlyDigits(this.value);
+      if (raw.length === 11 || raw.length === 14) {
+        buscarDocumento();
+      }
+    });
+  }
+
+  var cepInput = $id('clientCEP');
+  if (cepInput) {
+    cepInput.addEventListener('input', function() {
+      this.value = maskCEP(this.value);
+    });
+    cepInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        buscarCEP();
+      }
+    });
+    cepInput.addEventListener('blur', function() {
+      if (onlyDigits(this.value).length >= 8) {
+        buscarCEP();
+      }
+    });
+  }
 
   /* Frete / Desconto */
   ['frete', 'desconto'].forEach(function(id) {
@@ -996,8 +1172,34 @@ document.addEventListener('DOMContentLoaded', async function() {
   /* Botoes */
   $id('btnAddRow').addEventListener('click',     function() { addRow(); });
   $id('btnSalvar').addEventListener('click',     function() { saveBudget(); });
+  var btnComp = $id('btnCompartilhar') || $id('btnWhatsapp');
+  if (btnComp) {
+    btnComp.addEventListener('click', function() { compartilharPDF(getBudgetFromForm()); });
+  }
   $id('savePdfButton').addEventListener('click', function() { gerarPDF(getBudgetFromForm(), true); });
-  $id('printButton').addEventListener('click',   function() { gerarPDF(getBudgetFromForm(), false); });
+  $id('printButton').addEventListener('click',   function() { openPdfModal(getBudgetFromForm()); });
+
+  /* Atalhos de Teclado (Ctrl+S para Salvar e Esc para Fechar Modais) */
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      saveBudget();
+      return;
+    }
+    if (e.key === 'Escape') {
+      hideProdDropdown();
+      var modalAdd = $id('modalAddProduct');
+      if (modalAdd && modalAdd.classList.contains('show')) {
+        modalAdd.classList.remove('show');
+        _pendingProdTr = null;
+      }
+      var modalPag = $id('modalPagamento');
+      if (modalPag) {
+        var modalInst = bootstrap.Modal.getInstance(modalPag);
+        if (modalInst) modalInst.hide();
+      }
+    }
+  });
 
   /* Status Select color control */
   $id('budgetStatus').addEventListener('change', function() {
@@ -1060,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     if (btn) {
-      btn.innerHTML = '<span>' + iconHtml + ' ' + st + '</span> <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.7rem; opacity: 0.7;"></i>';
+      btn.innerHTML = '<span>' + iconHtml + ' ' + st + '</span> <i class="fa-solid fa-chevron-down ms-1" style="font-size: var(--text-xs); opacity: 0.7;"></i>';
       btn.style.color = color;
       btn.style.backgroundColor = bg;
     }
@@ -1112,7 +1314,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     var baseDate = new Date();
     for (var i = 1; i <= N; i++) {
       var due = new Date(baseDate.getFullYear(), baseDate.getMonth() + (i - 1), baseDate.getDate());
-      var dueISO = due.toISOString().slice(0, 10);
+      var dueISO = new Date(due.getTime() - due.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
       var pVal = (i === N) ? lastVal : val;
       
       var isPaid = getVal('budgetStatus') === 'Pago';
@@ -1223,7 +1425,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   $id('novoOrcamento').addEventListener('click', confirmarNovo);
-  $id('navNovoBtn').addEventListener('click', confirmarNovo);
+  var navNovoBtn = $id('navNovoBtn');
+  if (navNovoBtn) navNovoBtn.addEventListener('click', confirmarNovo);
 
   /* Timer de Salvamento Automático (Rascunho) */
   setInterval(function() {
@@ -1249,13 +1452,22 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function highlightMatch(text, query) {
+  if (!query) return escHtml(text);
+  var escaped = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  var regex = new RegExp('(' + escaped + ')', 'gi');
+  return escHtml(text).replace(regex, '<strong style="color:var(--brand-700); background:var(--brand-50); padding:0 2px; border-radius:3px;">$1</strong>');
+}
+
 function showProdDropdown(input, tr) {
   var q = input.value.trim().toLowerCase();
 
-  // Exige mínimo 3 caracteres para mostrar o dropdown
-  if (q.length < 3) { hideProdDropdown(); return; }
+  // Permite busca a partir de 1 caractere (ex: 1HP, 2CV, PP, 3/4)
+  if (q.length < 1) { hideProdDropdown(); return; }
 
-  var matched = _products.filter(function(p) { return p.name.toLowerCase().indexOf(q) >= 0; });
+  var matched = _products.filter(function(p) { 
+    return p.name.toLowerCase().indexOf(q) >= 0; 
+  }).slice(0, 15);
 
   var dd = $id('prodDropdown');
   dd.innerHTML = '';
@@ -1264,7 +1476,7 @@ function showProdDropdown(input, tr) {
   matched.forEach(function(p) {
     var div = document.createElement('div');
     div.className = 'prod-item';
-    div.innerHTML = '<span class="pi-name">' + escHtml(p.name) + '</span><span class="pi-price">' + currencyBR(p.price) + '</span>';
+    div.innerHTML = '<span class="pi-name">' + highlightMatch(p.name, q) + '</span><span class="pi-price">' + currencyBR(p.price) + '</span>';
     div.addEventListener('mousedown', function(e) { e.preventDefault(); selectProd(p, tr); });
     dd.appendChild(div);
   });
@@ -1354,7 +1566,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
 
     try {
-      var newProd = { id: crypto.randomUUID(), name: name, price: price };
+      var newProd = { id: generateUUID(), name: name, price: price };
       await ProductDB.save(newProd);
       _products.push(newProd);
       _products.sort(function(a, b) { return a.name.localeCompare(b.name, 'pt-BR'); });
@@ -1432,9 +1644,9 @@ function restaurarLogoPadrao() {
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="alert alert-success py-2 mb-3" style="font-size: .85rem;">
+        <div class="alert alert-success py-2 mb-3" style="font-size: var(--text-sm);">
           <div class="fw-bold">Parcelas Selecionadas:</div>
-          <ul id="selectedInstallmentsList" class="mb-0 ps-3 mt-1" style="font-size: .8rem;"></ul>
+          <ul id="selectedInstallmentsList" class="mb-0 ps-3 mt-1" style="font-size: var(--text-xs);"></ul>
           <hr class="my-2">
           <div class="d-flex justify-content-between align-items-center">
             <span class="fw-bold">Total a Pagar:</span>
@@ -1443,7 +1655,7 @@ function restaurarLogoPadrao() {
         </div>
         
         <div class="mb-3">
-          <label class="form-label fw-semibold" style="font-size: .82rem;">Forma de Pagamento</label>
+          <label class="form-label fw-semibold" style="font-size: var(--text-xs);">Forma de Pagamento</label>
           <select id="paymentMethodSelect" class="form-select form-select-sm">
             <option value="Pix">Pix</option>
             <option value="Dinheiro">Dinheiro</option>
@@ -1455,7 +1667,7 @@ function restaurarLogoPadrao() {
         </div>
         
         <div class="mb-3">
-          <label class="form-label fw-semibold" style="font-size: .82rem;">Data do Pagamento</label>
+          <label class="form-label fw-semibold" style="font-size: var(--text-xs);">Data do Pagamento</label>
           <input type="date" id="paymentDateInput" class="form-control form-control-sm">
         </div>
       </div>
